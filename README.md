@@ -145,6 +145,29 @@ Ejemplo de error:
 ```
 { "status": 404, "message": "Task with id 99 was not found" }
 ```
+## Diagramas C4
+
+Diagrama de contexto:
+
+<img width="1175" height="633" alt="image" src="https://github.com/user-attachments/assets/447b47be-accd-4230-ac7b-a1eb5aeb5496" />
+
+Link de donde fue realizado: https://lucid.app/lucidchart/9a371200-d70f-4c62-9cec-60442e0f5a12/edit?viewport_loc=-199%2C-183%2C2096%2C1159%2C0_0&invitationId=inv_71fcfe89-a623-4dda-9718-c33c5bb0b29f
+
+Diagrama contenedores:
+
+<img width="635" height="599" alt="image" src="https://github.com/user-attachments/assets/729b0049-bfa7-4ba8-829e-358d129a6e8b" />
+
+Link de donde fue realizado: https://lucid.app/lucidchart/eca753a9-0322-4724-8531-a94fe01810a4/edit?viewport_loc=-137%2C-57%2C1669%2C1159%2C0_0&invitationId=inv_eb3c0ace-f843-47fd-b452-cfe4aa538766
+
+Diagrama de componentes backend:
+
+<img width="1451" height="564" alt="image" src="https://github.com/user-attachments/assets/189d333c-a161-4d0a-bdcd-232d9ef65b41" />
+
+Diagrama de componentes frontend:
+
+<img width="1088" height="507" alt="image" src="https://github.com/user-attachments/assets/325b6b12-8a15-4fa4-8e32-9f65023bdb1d" />
+
+Link de donde fueron realizados: https://lucid.app/lucidchart/11e63f3c-bdc9-4a8b-8b8a-f71888644489/edit?viewport_loc=-18%2C296%2C3144%2C1738%2C0_0&invitationId=inv_3e241ff6-bb87-4592-b04d-54d4e4df1726
 
 ## Pruebas
 
