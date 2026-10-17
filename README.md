@@ -14,6 +14,7 @@ Natalia Andrea Rodriguez Torres
 
 - Video de demostración: https://youtu.be/6RhqSoNWYNY?si=JfLxBJZMiZ0GHhpQ
 - Informe del laboratorio: [todo-fullstack/docs/informe-laboratorio.md](todo-fullstack/docs/informe-laboratorio.md)
+- Informe del laboratorio: [docs/informe-laboratorio.md](docs/informe-laboratorio.md)
 
 ## Tecnologías
 
@@ -46,7 +47,7 @@ REST Controller  →  Service  →  Repository  →  Entity JPA
 ## Estructura del repositorio
 
 ```
-todo-fullstack/
+DOSW_LAB6_Rodriguez/
 ├── backend/        API Spring Boot
 ├── frontend/       Aplicación React + Vite
 ├── database/
@@ -85,7 +86,7 @@ Se necesitan tres terminales.
 docker pull postgres:17-alpine
 docker volume create todo-postgres-data
 docker run -d --name todo-postgres -e POSTGRES_DB=todo_db -e POSTGRES_USER=todo_user -e POSTGRES_PASSWORD=todo_password -p 5432:5432 -v todo-postgres-data:/var/lib/postgresql/data postgres:17-alpine
-docker cp todo-fullstack/database/001_create_schema.sql todo-postgres:/001_create_schema.sql
+docker cp database/001_create_schema.sql todo-postgres:/001_create_schema.sql
 docker exec -i todo-postgres psql -U todo_user -d todo_db -f /001_create_schema.sql
 ```
 
@@ -98,7 +99,7 @@ docker start todo-postgres
 ### 2. Back-end
 
 ```
-cd todo-fullstack/backend
+cd backend
 mvn spring-boot:run
 ```
 
@@ -107,7 +108,7 @@ La API queda disponible en `http://localhost:8080`. La conexión a la base se co
 ### 3. Front-end
 
 ```
-cd todo-fullstack/frontend
+cd frontend
 npm install
 npm run dev
 ```
@@ -171,7 +172,7 @@ Link de donde fueron realizados: https://lucid.app/lucidchart/11e63f3c-bdc9-4a8b
 
 ## Pruebas
 
-Back-end (desde `todo-fullstack/backend`):
+Back-end (desde `backend`):
 
 ```
 mvn clean test
@@ -183,7 +184,7 @@ mvn clean verify
 - `TaskServiceTest`: 9 pruebas del Service con el Repository simulado con Mockito.
 - `TaskControllerTest`: 9 pruebas del Controller con MockMvc y el Service simulado.
 
-Front-end (desde `todo-fullstack/frontend`):
+Front-end (desde `frontend`):
 
 ```
 npm test
@@ -193,7 +194,7 @@ Pruebas con Vitest y React Testing Library sobre `TaskForm`, `TaskList` y `Tasks
 
 ## Evidencias
 
-Las capturas están en [todo-fullstack/docs/evidence](todo-fullstack/docs/evidence).
+Las capturas están en [docs/evidence](docs/evidence).
 
 | N.º | Evidencia |
 | --- | --- |
