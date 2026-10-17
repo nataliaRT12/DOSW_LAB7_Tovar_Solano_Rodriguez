@@ -209,12 +209,21 @@ Las capturas están en [docs/evidence](docs/evidence).
 | 09 | Edición desde React |
 | 10 | Eliminación desde React |
 | 11 | Pruebas del front-end |
+| 12 | Crear categoría desde React |
+| 13 | Listado de categorías con colores |
+| 14 | Selector de categoría al crear una tarea |
+| 15 | Tareas con su categoría asignada |
 
 ## Parcial · Evolución: gestión de categorías
 
 Sobre la rama `new-requirement`, a partir del enunciado "Evolución de ToDo: gestión de categorías": se agregó la entidad `Category` (nombre + color, tabla `categories` en `database/002_add_categories.sql`) y la asociación opcional de una categoría a cada tarea (`category_id` en `tasks`), conservando el CRUD original intacto.
 
 En el back-end, nuevos endpoints en `/api/v1/categories` (listar, consultar, crear, actualizar) con validación de nombre duplicado y longitud; `tasks` ahora acepta `categoryId` en la creación y edición. En el front-end, un formulario y un listado de categorías (`frontend/src/features/categories`), y el selector de categoría integrado en `TaskForm`, incluida la opción "Sin categoría".
+
+![Crear categoría desde React](docs/evidence/12-react-category-create.jpg)
+![Listado de categorías con colores](docs/evidence/13-react-category-list.jpg)
+![Selector de categoría al crear una tarea](docs/evidence/14-react-task-category-select.jpg)
+![Tareas con su categoría asignada](docs/evidence/15-react-tasks-with-category.jpg)
 
 Para aplicar el cambio de esquema (con el contenedor de Postgres ya corriendo):
 
