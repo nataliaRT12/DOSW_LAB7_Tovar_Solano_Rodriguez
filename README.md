@@ -216,6 +216,13 @@ Sobre la rama `new-requirement`, a partir del enunciado "Evolución de ToDo: ges
 
 En el back-end, nuevos endpoints en `/api/v1/categories` (listar, consultar, crear, actualizar) con validación de nombre duplicado y longitud; `tasks` ahora acepta `categoryId` en la creación y edición. En el front-end, un formulario y un listado de categorías (`frontend/src/features/categories`), y el selector de categoría integrado en `TaskForm`, incluida la opción "Sin categoría".
 
+Para aplicar el cambio de esquema (con el contenedor de Postgres ya corriendo):
+
+```
+docker cp database/002_add_categories.sql todo-postgres:/002_add_categories.sql
+docker exec -i todo-postgres psql -U todo_user -d todo_db -f /002_add_categories.sql
+```
+
 ## Detener los servicios
 
 ```
