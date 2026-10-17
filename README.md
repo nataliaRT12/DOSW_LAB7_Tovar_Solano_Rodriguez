@@ -146,6 +146,10 @@ Ejemplo de error:
 ```
 { "status": 404, "message": "Task with id 99 was not found" }
 ```
+## Descripción y alcance de la funcionalidad implementada
+
+Las respectivas historias de usuario se encuentran en Jira: https://parcialdosw.atlassian.net/jira/software/projects/AE/boards/70/timeline?atlOrigin=eyJpIjoiODRkZmJhZTYxMjU3NDM0N2JhYTI3YmQwYzFjOWJkYTgiLCJwIjoiaiJ9
+
 ## Diagramas C4
 
 Diagrama de contexto:
