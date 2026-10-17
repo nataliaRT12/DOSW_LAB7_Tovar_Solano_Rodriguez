@@ -31,7 +31,10 @@ public class TaskEntity {
  
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
- 
+
+    @Column(name = "category_id")
+    private Long categoryId;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getTitle() { return title; }
@@ -46,5 +49,7 @@ public class TaskEntity {
     public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Long getCategoryId() { return categoryId; }
+    public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
 }
  

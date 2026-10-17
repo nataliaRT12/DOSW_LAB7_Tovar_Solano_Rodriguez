@@ -22,5 +22,7 @@ public record TaskUpdateRequest(
         @NotNull(message = "La prioridad es obligatoria")
         TaskPriority priority,
 
-        LocalDate dueDate
+        LocalDate dueDate,
+
+        Long categoryId
 ) {}

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import * as taskApi from '../../../api/taskApi'
+import * as categoryApi from '../../../api/categoryApi'
 import TasksPage from './TasksPage'
 
 vi.mock('../../../api/taskApi', () => ({
@@ -10,6 +11,13 @@ vi.mock('../../../api/taskApi', () => ({
   createTask: vi.fn(),
   updateTask: vi.fn(),
   deleteTask: vi.fn(),
+}))
+
+vi.mock('../../../api/categoryApi', () => ({
+  getCategories: vi.fn(),
+  getCategory: vi.fn(),
+  createCategory: vi.fn(),
+  updateCategory: vi.fn(),
 }))
 
 const sampleTask = {
@@ -24,6 +32,7 @@ const sampleTask = {
 describe('TasksPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    categoryApi.getCategories.mockResolvedValue([])
   })
 
   it('shows a loading message while the tasks are loading', () => {
@@ -67,6 +76,7 @@ describe('TasksPage', () => {
         description: '',
         priority: 'MEDIUM',
         dueDate: null,
+        categoryId: null,
       }),
     )
   })
@@ -99,6 +109,7 @@ describe('TasksPage', () => {
         status: 'IN_PROGRESS',
         priority: 'MEDIUM',
         dueDate: '2026-09-30',
+        categoryId: null,
       }),
     )
   })

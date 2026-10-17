@@ -1,6 +1,6 @@
 import TaskItem from './TaskItem'
 
-export default function TaskList({ tasks, onEdit, onDelete, onChangeStatus }) {
+export default function TaskList({ tasks, categories = [], onEdit, onDelete, onChangeStatus }) {
   if (tasks.length === 0) {
     return <p>No tasks yet.</p>
   }
@@ -11,6 +11,7 @@ export default function TaskList({ tasks, onEdit, onDelete, onChangeStatus }) {
         <TaskItem
           key={task.id}
           task={task}
+          categories={categories}
           onEdit={onEdit}
           onDelete={onDelete}
           onChangeStatus={onChangeStatus}

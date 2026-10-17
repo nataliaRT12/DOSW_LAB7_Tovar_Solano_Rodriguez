@@ -10,7 +10,10 @@ const PRIORITY_LABELS = {
   HIGH: 'High',
 }
 
-export default function TaskItem({ task, onEdit, onDelete, onChangeStatus }) {
+export default function TaskItem({ task, categories = [], onEdit, onDelete, onChangeStatus }) {
+  const category = categories.find((c) => c.id === task.categoryId)
+  const categoryLabel = category ? category.name : 'Sin categoria'
+
   return (
     <li className="task-item">
       <div className="task-info">
@@ -18,6 +21,7 @@ export default function TaskItem({ task, onEdit, onDelete, onChangeStatus }) {
         {task.description && <p>{task.description}</p>}
         <span className="badge">{STATUS_LABELS[task.status]}</span>
         <span className="badge">{PRIORITY_LABELS[task.priority]}</span>
+        <span className="badge">{categoryLabel}</span>
         <span className="due-date">{task.dueDate ?? 'No due date'}</span>
       </div>
       <div className="task-actions">

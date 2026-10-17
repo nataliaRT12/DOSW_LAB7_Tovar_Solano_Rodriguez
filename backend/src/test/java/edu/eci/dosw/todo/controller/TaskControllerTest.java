@@ -46,7 +46,7 @@ class TaskControllerTest {
     private TaskResponse buildResponse(Long id) {
         return new TaskResponse(id, "Terminar laboratorio DOSW", "Completar pruebas del backend",
                 TaskStatus.PENDING, TaskPriority.HIGH,
-                LocalDate.of(2026, 9, 25), LocalDateTime.of(2026, 9, 21, 10, 30));
+                LocalDate.of(2026, 9, 25), LocalDateTime.of(2026, 9, 21, 10, 30), null);
     }
 
     @Test
@@ -83,7 +83,7 @@ class TaskControllerTest {
     void create_shouldReturn201WhenRequestIsValid() throws Exception {
         TaskCreateRequest request = new TaskCreateRequest(
                 "Terminar laboratorio DOSW", "Completar pruebas del backend",
-                TaskPriority.HIGH, LocalDate.of(2026, 9, 25));
+                TaskPriority.HIGH, LocalDate.of(2026, 9, 25), null);
         when(service.create(any(TaskCreateRequest.class))).thenReturn(buildResponse(1L));
 
         mockMvc.perform(post("/api/v1/tasks")
@@ -96,7 +96,7 @@ class TaskControllerTest {
 
     @Test
     void create_shouldReturn400WhenTitleIsBlank() throws Exception {
-        TaskCreateRequest request = new TaskCreateRequest("", "Sin título", TaskPriority.LOW, null);
+        TaskCreateRequest request = new TaskCreateRequest("", "Sin título", TaskPriority.LOW, null, null);
 
         mockMvc.perform(post("/api/v1/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -109,7 +109,7 @@ class TaskControllerTest {
     void update_shouldReturn200WhenTaskExists() throws Exception {
         TaskUpdateRequest request = new TaskUpdateRequest(
                 "Terminar laboratorio DOSW", "Backend y Front-end terminados",
-                TaskStatus.IN_PROGRESS, TaskPriority.HIGH, LocalDate.of(2026, 9, 25));
+                TaskStatus.IN_PROGRESS, TaskPriority.HIGH, LocalDate.of(2026, 9, 25), null);
         when(service.update(eq(1L), any(TaskUpdateRequest.class))).thenReturn(buildResponse(1L));
 
         mockMvc.perform(put("/api/v1/tasks/1")
@@ -122,7 +122,7 @@ class TaskControllerTest {
     @Test
     void update_shouldReturn404WhenTaskDoesNotExist() throws Exception {
         TaskUpdateRequest request = new TaskUpdateRequest(
-                "Título", null, TaskStatus.PENDING, TaskPriority.LOW, null);
+                "Título", null, TaskStatus.PENDING, TaskPriority.LOW, null, null);
         when(service.update(eq(99L), any(TaskUpdateRequest.class)))
                 .thenThrow(new TaskNotFoundException(99L));
 

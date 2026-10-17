@@ -80,7 +80,7 @@ class TaskServiceTest {
     @Test
     void create_shouldCreateTask() {
         TaskCreateRequest request = new TaskCreateRequest(
-                "Nueva tarea", "Descripción", TaskPriority.HIGH, LocalDate.of(2026, 9, 25));
+                "Nueva tarea", "Descripción", TaskPriority.HIGH, LocalDate.of(2026, 9, 25), null);
         when(repository.save(any(TaskEntity.class))).thenAnswer(inv -> {
             TaskEntity e = inv.getArgument(0);
             e.setId(1L);
@@ -97,7 +97,7 @@ class TaskServiceTest {
 
     @Test
     void create_shouldAssignDefaultStatus() {
-        TaskCreateRequest request = new TaskCreateRequest("Tarea", null, null, null);
+        TaskCreateRequest request = new TaskCreateRequest("Tarea", null, null, null, null);
         when(repository.save(any(TaskEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
         service.create(request);
@@ -116,7 +116,7 @@ class TaskServiceTest {
         when(repository.save(any(TaskEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         TaskUpdateRequest request = new TaskUpdateRequest(
                 "Título editado", "Backend y Front-end terminados",
-                TaskStatus.IN_PROGRESS, TaskPriority.LOW, LocalDate.of(2026, 10, 1));
+                TaskStatus.IN_PROGRESS, TaskPriority.LOW, LocalDate.of(2026, 10, 1), null);
 
         TaskResponse result = service.update(1L, request);
 
@@ -130,7 +130,7 @@ class TaskServiceTest {
     void update_shouldThrowExceptionWhenTaskDoesNotExist() {
         when(repository.findById(99L)).thenReturn(Optional.empty());
         TaskUpdateRequest request = new TaskUpdateRequest(
-                "x", null, TaskStatus.PENDING, TaskPriority.LOW, null);
+                "x", null, TaskStatus.PENDING, TaskPriority.LOW, null, null);
 
         assertThatThrownBy(() -> service.update(99L, request))
                 .isInstanceOf(TaskNotFoundException.class);

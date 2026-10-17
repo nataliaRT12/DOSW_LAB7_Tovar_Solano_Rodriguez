@@ -1,12 +1,13 @@
 import { useState } from 'react'
 
-export default function TaskForm({ initialTask = null, onSubmit, onCancel }) {
+export default function TaskForm({ initialTask = null, categories = [], onSubmit, onCancel }) {
   const isEditing = initialTask !== null
   const [title, setTitle] = useState(initialTask?.title ?? '')
   const [description, setDescription] = useState(initialTask?.description ?? '')
   const [status, setStatus] = useState(initialTask?.status ?? 'PENDING')
   const [priority, setPriority] = useState(initialTask?.priority ?? 'MEDIUM')
   const [dueDate, setDueDate] = useState(initialTask?.dueDate ?? '')
+  const [categoryId, setCategoryId] = useState(initialTask?.categoryId ?? '')
   const [validationError, setValidationError] = useState('')
 
   async function handleSubmit(event) {
@@ -17,9 +18,11 @@ export default function TaskForm({ initialTask = null, onSubmit, onCancel }) {
     }
     setValidationError('')
 
+    const categoryIdValue = categoryId === '' ? null : Number(categoryId)
+
     const payload = isEditing
-      ? { title: title.trim(), description, status, priority, dueDate: dueDate || null }
-      : { title: title.trim(), description, priority, dueDate: dueDate || null }
+      ? { title: title.trim(), description, status, priority, dueDate: dueDate || null, categoryId: categoryIdValue }
+      : { title: title.trim(), description, priority, dueDate: dueDate || null, categoryId: categoryIdValue }
 
     await onSubmit(payload)
 
@@ -28,6 +31,7 @@ export default function TaskForm({ initialTask = null, onSubmit, onCancel }) {
       setDescription('')
       setPriority('MEDIUM')
       setDueDate('')
+      setCategoryId('')
     }
   }
 
@@ -86,6 +90,20 @@ export default function TaskForm({ initialTask = null, onSubmit, onCancel }) {
         value={dueDate}
         onChange={(event) => setDueDate(event.target.value)}
       />
+
+      <label htmlFor="task-category">Categoria</label>
+      <select
+        id="task-category"
+        value={categoryId}
+        onChange={(event) => setCategoryId(event.target.value)}
+      >
+        <option value="">Sin categoria</option>
+        {categories.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.name}
+          </option>
+        ))}
+      </select>
 
       <div className="form-actions">
         <button type="submit">Save</button>

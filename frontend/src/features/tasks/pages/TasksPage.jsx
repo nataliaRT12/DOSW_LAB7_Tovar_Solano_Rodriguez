@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import TaskForm from '../components/TaskForm'
 import TaskList from '../components/TaskList'
 import { useTasks } from '../hooks/useTasks'
+import CategoryForm from '../../categories/components/CategoryForm'
+import CategoryList from '../../categories/components/CategoryList'
+import * as categoryApi from '../../../api/categoryApi'
 
 const NEXT_STATUS = {
   PENDING: 'IN_PROGRESS',
@@ -11,7 +14,17 @@ const NEXT_STATUS = {
 
 export default function TasksPage() {
   const { tasks, loading, error, addTask, editTask, removeTask } = useTasks()
+  const [categories, setCategories] = useState([])
   const [editingTask, setEditingTask] = useState(null)
+
+  useEffect(() => {
+    categoryApi.getCategories().then(setCategories)
+  }, [])
+
+  async function handleAddCategory(category) {
+    await categoryApi.createCategory(category)
+    setCategories(await categoryApi.getCategories())
+  }
 
   async function handleSubmit(payload) {
     if (editingTask) {
@@ -29,6 +42,7 @@ export default function TasksPage() {
       status: NEXT_STATUS[task.status],
       priority: task.priority,
       dueDate: task.dueDate,
+      categoryId: task.categoryId ?? null,
     })
   }
 
@@ -36,9 +50,13 @@ export default function TasksPage() {
     <main className="tasks-page">
       <h1>ToDo Tasks</h1>
 
+      <CategoryForm onSubmit={handleAddCategory} />
+      <CategoryList categories={categories} />
+
       <TaskForm
         key={editingTask ? editingTask.id : 'new'}
         initialTask={editingTask}
+        categories={categories}
         onSubmit={handleSubmit}
         onCancel={() => setEditingTask(null)}
       />
@@ -48,6 +66,7 @@ export default function TasksPage() {
 
       <TaskList
         tasks={tasks}
+        categories={categories}
         onEdit={setEditingTask}
         onDelete={removeTask}
         onChangeStatus={handleChangeStatus}

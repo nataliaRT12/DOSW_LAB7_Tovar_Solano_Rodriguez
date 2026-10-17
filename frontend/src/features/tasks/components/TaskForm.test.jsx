@@ -27,6 +27,7 @@ describe('TaskForm', () => {
       description: '',
       priority: 'MEDIUM',
       dueDate: null,
+      categoryId: null,
     })
   })
 
@@ -64,6 +65,7 @@ describe('TaskForm', () => {
       status: 'IN_PROGRESS',
       priority: 'HIGH',
       dueDate: '2026-09-30',
+      categoryId: null,
     })
   })
 })

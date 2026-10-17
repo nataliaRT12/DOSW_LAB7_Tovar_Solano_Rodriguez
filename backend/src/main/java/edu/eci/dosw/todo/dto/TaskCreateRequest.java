@@ -16,5 +16,7 @@ public record TaskCreateRequest(
 
         TaskPriority priority,
 
-        LocalDate dueDate
+        LocalDate dueDate,
+
+        Long categoryId
 ) {}

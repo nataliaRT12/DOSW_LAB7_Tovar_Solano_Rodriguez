@@ -41,6 +41,7 @@ public class TaskServiceImpl implements TaskService {
         entity.setStatus(TaskStatus.PENDING);
         entity.setPriority(request.priority() != null ? request.priority() : TaskPriority.MEDIUM);
         entity.setCreatedAt(LocalDateTime.now());
+        entity.setCategoryId(request.categoryId());
         return toResponse(repository.save(entity));
     }
 
@@ -52,6 +53,7 @@ public class TaskServiceImpl implements TaskService {
         entity.setStatus(request.status());
         entity.setPriority(request.priority());
         entity.setDueDate(request.dueDate());
+        entity.setCategoryId(request.categoryId());
         return toResponse(repository.save(entity));
     }
 
@@ -69,6 +71,6 @@ public class TaskServiceImpl implements TaskService {
 
     private TaskResponse toResponse(TaskEntity e) {
         return new TaskResponse(e.getId(), e.getTitle(), e.getDescription(),
-                e.getStatus(), e.getPriority(), e.getDueDate(), e.getCreatedAt());
+                e.getStatus(), e.getPriority(), e.getDueDate(), e.getCreatedAt(), e.getCategoryId());
     }
 }
