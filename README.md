@@ -12,7 +12,7 @@ Aplicación web para gestionar tareas personales. Permite crear, consultar, edit
 
 Natalia Andrea Rodriguez Torres 
 
-- Video de demostración: _enlace por completar_
+- Video de demostración: https://youtu.be/6RhqSoNWYNY?si=JfLxBJZMiZ0GHhpQ
 - Informe del laboratorio: [todo-fullstack/docs/informe-laboratorio.md](todo-fullstack/docs/informe-laboratorio.md)
 
 ## Tecnologías
