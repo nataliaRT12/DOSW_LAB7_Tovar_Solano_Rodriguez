@@ -98,6 +98,22 @@ flowchart LR
 
 Verde: componente nuevo. Amarillo: componente existente que se modifica.
 
+### Migración de la base de datos
+
+El script [`database/003_add_users_security.sql`](database/003_add_users_security.sql) crea la tabla `users` y agrega a `tasks` la columna `user_id` con su llave foránea. Para no borrar las tareas que ya existían:
+
+1. Se crea el usuario `legacy@todo.local` ("Tareas anteriores").
+2. Se agrega `user_id` permitiendo nulos y se asignan a ese usuario todas las tareas existentes.
+3. Solo después se aplica `NOT NULL`, la llave foránea y un índice sobre `user_id`.
+
+Todo se ejecuta en una transacción. El usuario `legacy` tiene como hash el valor `LOCKED`, que no corresponde a un hash BCrypt, por lo que nadie puede iniciar sesión con esa cuenta.
+
+```
+Get-Content database/003_add_users_security.sql | docker exec -i todo-postgres psql -U todo_user -d todo_db
+```
+
+![Migración 003 aplicada](docs/evidence/security/01-migracion-003.png)
+
 ### Avance del laboratorio
 
 - [x] Parte 1 · Rama `feature/jwt-security` creada a partir de `main`
@@ -105,7 +121,7 @@ Verde: componente nuevo. Amarillo: componente existente que se modifica.
 - [ ] Parte 1 · Épica, features, historias y tareas en Jira
 - [x] Parte 1 · Estado inicial, alcance y componentes a modificar en el README
 - [x] Parte 2 · Script de migración `003_add_users_security.sql`
-- [ ] Parte 2 · Migración ejecutada en el contenedor `todo-postgres`
+- [x] Parte 2 · Migración ejecutada en el contenedor `todo-postgres`
 - [ ] Parte 2 · Entidades y repositorios con propietario de la tarea
 - [ ] Parte 2 · Pruebas de repositorio por propietario
 - [ ] Parte 3 · Spring Security, BCrypt, registro y login
