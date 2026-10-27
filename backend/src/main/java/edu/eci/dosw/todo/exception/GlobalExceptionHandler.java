@@ -20,6 +20,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
     @ExceptionHandler(CategoryNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCategoryNotFound(CategoryNotFoundException ex) {
         return build(HttpStatus.NOT_FOUND, ex.getMessage());
