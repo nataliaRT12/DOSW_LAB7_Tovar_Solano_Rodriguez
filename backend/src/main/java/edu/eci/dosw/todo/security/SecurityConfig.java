@@ -34,7 +34,8 @@ public class SecurityConfig {
     private static final int MIN_SECRET_BYTES = 32;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityErrorHandler errorHandler)
+            throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -43,7 +44,12 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .authenticationEntryPoint(errorHandler)
+                        .accessDeniedHandler(errorHandler))
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(errorHandler)
+                        .accessDeniedHandler(errorHandler));
         return http.build();
     }
 
