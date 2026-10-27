@@ -16,6 +16,108 @@ Natalia Andrea Rodriguez Torres
 - Informe del laboratorio: [todo-fullstack/docs/informe-laboratorio.md](todo-fullstack/docs/informe-laboratorio.md)
 - Informe del laboratorio: [docs/informe-laboratorio.md](docs/informe-laboratorio.md)
 
+## Laboratorio de extensión · Seguridad con Spring Security y JWT
+
+Enunciado: [AppToDo_Security](https://github.com/DOSW-2026-2/AppToDo_Security/blob/main/README.md)  
+Rama de trabajo: `feature/jwt-security`  
+Tablero de Jira (épica de seguridad): https://parcialdosw.atlassian.net/jira/software/projects/AE/boards/70/timeline
+
+### Estado inicial
+
+Antes de empezar se verificó que el proyecto del laboratorio anterior funcionara completo: PostgreSQL en Docker, la API en Spring Boot y el frontend en React.
+
+- La API expone el CRUD de tareas en `/api/v1/tasks` y el de categorías en `/api/v1/categories`.
+- No existe el concepto de usuario: cualquier persona que conozca la URL puede listar, crear, editar o eliminar **todas** las tareas, sin enviar credenciales.
+- El frontend muestra directamente la lista de tareas, sin inicio de sesión.
+- La base de datos tiene las tablas `tasks` y `categories` (scripts `001` y `002`).
+
+![Estado inicial del CRUD](docs/evidence/security/00-estado-inicial-crud.png)
+
+![API sin autenticación](docs/evidence/security/00-api-sin-token.png)
+
+### Alcance de los cambios
+
+Se convierte ToDo en una aplicación con cuentas de usuario y tareas privadas:
+
+- Registro de usuarios (nombre, correo y contraseña) e inicio de sesión con correo y contraseña.
+- Contraseñas almacenadas con BCrypt.
+- Emisión de un JWT firmado (HS256) con duración de 30 minutos y validación en cada petición protegida.
+- Cada usuario solo puede consultar, crear, editar y eliminar sus propias tareas.
+- Endpoint administrativo `/api/v1/admin/summary` solo para el rol `ADMIN`.
+- Frontend con registro, inicio de sesión, cierre de sesión y token guardado en memoria.
+- Pruebas automatizadas de los flujos correctos y de los intentos de acceso indebido.
+
+Fuera del alcance: despliegue en la nube, CI/CD, login con Google, refresh tokens, MFA y recuperación de contraseña.
+
+### Componentes que se modifican
+
+| Capa | Componente | Cambio |
+| --- | --- | --- |
+| Base de datos | `users` | Nueva tabla (`003_add_users_security.sql`) |
+| Base de datos | `tasks` | Nueva llave foránea `user_id` hacia `users` |
+| Backend | `UserEntity`, `UserRole`, `UserRepository` | Nuevos |
+| Backend | `SecurityConfig` (`SecurityFilterChain`, `PasswordEncoder`, `JwtEncoder`, `JwtDecoder`) | Nuevo |
+| Backend | `TokenService` | Nuevo: genera el JWT |
+| Backend | `AuthService`, `AuthController` | Nuevos: registro y login |
+| Backend | `UserController` (`/users/me`), `AdminController` (`/admin/summary`) | Nuevos |
+| Backend | `TaskEntity`, `TaskRepository`, `TaskService`, `TaskController` | Modificados: filtran por el usuario autenticado |
+| Backend | `GlobalExceptionHandler` | Modificado: errores 401, 403 y 409 |
+| Frontend | `AuthContext`, `LoginForm`, `RegisterForm`, `authApi.js` | Nuevos |
+| Frontend | `taskApi.js`, `useTasks`, `TasksPage`, `App.jsx` | Modificados: envían el token y manejan la sesión |
+
+```mermaid
+flowchart LR
+    subgraph front["React"]
+        Auth["AuthContext / LoginForm / RegisterForm"]:::nuevo
+        Tasks["TasksPage / useTasks / taskApi"]:::modificado
+    end
+    subgraph api["API Spring Boot"]
+        Sec["SecurityFilterChain + JwtDecoder"]:::nuevo
+        AuthC["AuthController"]:::nuevo
+        AuthS["AuthService + TokenService"]:::nuevo
+        UserC["UserController / AdminController"]:::nuevo
+        TaskC["TaskController"]:::modificado
+        TaskS["TaskService"]:::modificado
+        UserR["UserRepository"]:::nuevo
+        TaskR["TaskRepository"]:::modificado
+    end
+    DB[("PostgreSQL: users, tasks")]:::modificado
+
+    Auth -->|login / register| AuthC
+    Tasks -->|Bearer JWT| Sec
+    Sec --> TaskC
+    Sec --> UserC
+    AuthC --> AuthS --> UserR
+    TaskC --> TaskS --> TaskR
+    UserR --> DB
+    TaskR --> DB
+
+    classDef nuevo fill:#d4f4dd,stroke:#2e7d32,color:#000
+    classDef modificado fill:#fff3cd,stroke:#b8860b,color:#000
+```
+
+Verde: componente nuevo. Amarillo: componente existente que se modifica.
+
+### Avance del laboratorio
+
+- [x] Parte 1 · Rama `feature/jwt-security` creada a partir de `main`
+- [x] Parte 1 · Captura del estado inicial del CRUD
+- [ ] Parte 1 · Épica, features, historias y tareas en Jira
+- [x] Parte 1 · Estado inicial, alcance y componentes a modificar en el README
+- [x] Parte 2 · Script de migración `003_add_users_security.sql`
+- [ ] Parte 2 · Migración ejecutada en el contenedor `todo-postgres`
+- [ ] Parte 2 · Entidades y repositorios con propietario de la tarea
+- [ ] Parte 2 · Pruebas de repositorio por propietario
+- [ ] Parte 3 · Spring Security, BCrypt, registro y login
+- [ ] Parte 4 · Generación y validación del JWT
+- [ ] Parte 5 · CRUD protegido, tareas por usuario y rol `ADMIN`
+- [ ] Parte 6 · Frontend con registro, login, cierre de sesión y token en memoria
+- [ ] Parte 7 · Pruebas automatizadas (PT-01 a PT-18) y cobertura JaCoCo
+- [ ] Parte 8 · Verificación manual de punta a punta
+- [ ] Diagramas C4, de clases y entidad-relación actualizados
+- [ ] Informe `docs/informe-seguridad-jwt.md`
+- [ ] Video de demostración
+
 ## Tecnologías
 
 | Capa | Tecnología |
