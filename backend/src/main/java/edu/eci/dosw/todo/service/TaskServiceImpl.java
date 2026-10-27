@@ -8,6 +8,7 @@ import edu.eci.dosw.todo.entity.TaskPriority;
 import edu.eci.dosw.todo.entity.TaskStatus;
 import edu.eci.dosw.todo.exception.TaskNotFoundException;
 import edu.eci.dosw.todo.repository.TaskRepository;
+import edu.eci.dosw.todo.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,23 +18,25 @@ import java.util.List;
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository repository;
+    private final UserRepository userRepository;
 
-    public TaskServiceImpl(TaskRepository repository) {
+    public TaskServiceImpl(TaskRepository repository, UserRepository userRepository) {
         this.repository = repository;
+        this.userRepository = userRepository;
     }
 
     @Override
-    public List<TaskResponse> findAll() {
-        return repository.findAll().stream().map(this::toResponse).toList();
+    public List<TaskResponse> findAll(Long ownerId) {
+        return repository.findAllByOwnerId(ownerId).stream().map(this::toResponse).toList();
     }
 
     @Override
-    public TaskResponse findById(Long id) {
-        return toResponse(getOrThrow(id));
+    public TaskResponse findById(Long id, Long ownerId) {
+        return toResponse(getOrThrow(id, ownerId));
     }
 
     @Override
-    public TaskResponse create(TaskCreateRequest request) {
+    public TaskResponse create(TaskCreateRequest request, Long ownerId) {
         TaskEntity entity = new TaskEntity();
         entity.setTitle(request.title());
         entity.setDescription(request.description());
@@ -41,12 +44,13 @@ public class TaskServiceImpl implements TaskService {
         entity.setStatus(TaskStatus.PENDING);
         entity.setPriority(request.priority() != null ? request.priority() : TaskPriority.MEDIUM);
         entity.setCreatedAt(LocalDateTime.now());
+        entity.setOwner(userRepository.getReferenceById(ownerId));
         return toResponse(repository.save(entity));
     }
 
     @Override
-    public TaskResponse update(Long id, TaskUpdateRequest request) {
-        TaskEntity entity = getOrThrow(id);
+    public TaskResponse update(Long id, TaskUpdateRequest request, Long ownerId) {
+        TaskEntity entity = getOrThrow(id, ownerId);
         entity.setTitle(request.title());
         entity.setDescription(request.description());
         entity.setStatus(request.status());
@@ -56,15 +60,12 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void delete(Long id) {
-        if (!repository.existsById(id)) {
-            throw new TaskNotFoundException(id);
-        }
-        repository.deleteById(id);
+    public void delete(Long id, Long ownerId) {
+        repository.delete(getOrThrow(id, ownerId));
     }
 
-    private TaskEntity getOrThrow(Long id) {
-        return repository.findById(id).orElseThrow(() -> new TaskNotFoundException(id));
+    private TaskEntity getOrThrow(Long id, Long ownerId) {
+        return repository.findByIdAndOwnerId(id, ownerId).orElseThrow(() -> new TaskNotFoundException(id));
     }
 
     private TaskResponse toResponse(TaskEntity e) {

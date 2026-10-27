@@ -7,6 +7,8 @@ import edu.eci.dosw.todo.service.TaskService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,29 +31,35 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TaskResponse>> findAll() {
-        return ResponseEntity.ok(service.findAll());
+    public ResponseEntity<List<TaskResponse>> findAll(@AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.ok(service.findAll(userId(jwt)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TaskResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
+    public ResponseEntity<TaskResponse> findById(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.ok(service.findById(id, userId(jwt)));
     }
 
     @PostMapping
-    public ResponseEntity<TaskResponse> create(@Valid @RequestBody TaskCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(request));
+    public ResponseEntity<TaskResponse> create(@Valid @RequestBody TaskCreateRequest request,
+                                               @AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(request, userId(jwt)));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TaskResponse> update(@PathVariable Long id,
-                                               @Valid @RequestBody TaskUpdateRequest request) {
-        return ResponseEntity.ok(service.update(id, request));
+                                               @Valid @RequestBody TaskUpdateRequest request,
+                                               @AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.ok(service.update(id, request, userId(jwt)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        service.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+        service.delete(id, userId(jwt));
         return ResponseEntity.noContent().build();
+    }
+
+    private Long userId(Jwt jwt) {
+        return Long.valueOf(jwt.getSubject());
     }
 }

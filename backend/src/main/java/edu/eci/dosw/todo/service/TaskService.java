@@ -7,9 +7,9 @@ import edu.eci.dosw.todo.dto.TaskUpdateRequest;
 import java.util.List;
 
 public interface TaskService {
-    List<TaskResponse> findAll();
-    TaskResponse findById(Long id);
-    TaskResponse create(TaskCreateRequest request);
-    TaskResponse update(Long id, TaskUpdateRequest request);
-    void delete(Long id);
+    List<TaskResponse> findAll(Long ownerId);
+    TaskResponse findById(Long id, Long ownerId);
+    TaskResponse create(TaskCreateRequest request, Long ownerId);
+    TaskResponse update(Long id, TaskUpdateRequest request, Long ownerId);
+    void delete(Long id, Long ownerId);
 }
