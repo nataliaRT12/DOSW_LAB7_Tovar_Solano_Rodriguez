@@ -6,10 +6,13 @@ import edu.eci.dosw.todo.dto.TaskUpdateRequest;
 import edu.eci.dosw.todo.entity.TaskPriority;
 import edu.eci.dosw.todo.entity.TaskStatus;
 import edu.eci.dosw.todo.exception.TaskNotFoundException;
+import edu.eci.dosw.todo.security.SecurityConfig;
+import edu.eci.dosw.todo.security.SecurityErrorHandler;
 import edu.eci.dosw.todo.service.TaskService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,8 +25,10 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -31,7 +36,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(TaskController.class)
+@WebMvcTest(value = TaskController.class, properties = "jwt.secret=test-secret-for-unit-tests-only-0123456789")
+@Import({SecurityConfig.class, SecurityErrorHandler.class})
 class TaskControllerTest {
 
     @Autowired
@@ -53,7 +59,7 @@ class TaskControllerTest {
     void findAll_shouldReturn200() throws Exception {
         when(service.findAll()).thenReturn(List.of(buildResponse(1L), buildResponse(2L)));
 
-        mockMvc.perform(get("/api/v1/tasks"))
+        mockMvc.perform(get("/api/v1/tasks").with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(1));
@@ -63,7 +69,7 @@ class TaskControllerTest {
     void findById_shouldReturn200WhenTaskExists() throws Exception {
         when(service.findById(1L)).thenReturn(buildResponse(1L));
 
-        mockMvc.perform(get("/api/v1/tasks/1"))
+        mockMvc.perform(get("/api/v1/tasks/1").with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.status").value("PENDING"));
@@ -73,7 +79,7 @@ class TaskControllerTest {
     void findById_shouldReturn404WhenTaskDoesNotExist() throws Exception {
         when(service.findById(99L)).thenThrow(new TaskNotFoundException(99L));
 
-        mockMvc.perform(get("/api/v1/tasks/99"))
+        mockMvc.perform(get("/api/v1/tasks/99").with(jwt()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").value("Task with id 99 was not found"));
@@ -86,7 +92,7 @@ class TaskControllerTest {
                 TaskPriority.HIGH, LocalDate.of(2026, 9, 25));
         when(service.create(any(TaskCreateRequest.class))).thenReturn(buildResponse(1L));
 
-        mockMvc.perform(post("/api/v1/tasks")
+        mockMvc.perform(post("/api/v1/tasks").with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -98,7 +104,7 @@ class TaskControllerTest {
     void create_shouldReturn400WhenTitleIsBlank() throws Exception {
         TaskCreateRequest request = new TaskCreateRequest("", "Sin título", TaskPriority.LOW, null);
 
-        mockMvc.perform(post("/api/v1/tasks")
+        mockMvc.perform(post("/api/v1/tasks").with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -112,7 +118,7 @@ class TaskControllerTest {
                 TaskStatus.IN_PROGRESS, TaskPriority.HIGH, LocalDate.of(2026, 9, 25));
         when(service.update(eq(1L), any(TaskUpdateRequest.class))).thenReturn(buildResponse(1L));
 
-        mockMvc.perform(put("/api/v1/tasks/1")
+        mockMvc.perform(put("/api/v1/tasks/1").with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -126,7 +132,7 @@ class TaskControllerTest {
         when(service.update(eq(99L), any(TaskUpdateRequest.class)))
                 .thenThrow(new TaskNotFoundException(99L));
 
-        mockMvc.perform(put("/api/v1/tasks/99")
+        mockMvc.perform(put("/api/v1/tasks/99").with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
@@ -134,7 +140,7 @@ class TaskControllerTest {
 
     @Test
     void delete_shouldReturn204WhenTaskExists() throws Exception {
-        mockMvc.perform(delete("/api/v1/tasks/1"))
+        mockMvc.perform(delete("/api/v1/tasks/1").with(jwt()))
                 .andExpect(status().isNoContent());
 
         verify(service).delete(1L);
@@ -144,7 +150,24 @@ class TaskControllerTest {
     void delete_shouldReturn404WhenTaskDoesNotExist() throws Exception {
         doThrow(new TaskNotFoundException(99L)).when(service).delete(99L);
 
-        mockMvc.perform(delete("/api/v1/tasks/99"))
+        mockMvc.perform(delete("/api/v1/tasks/99").with(jwt()))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void findAll_shouldReturn401WithoutToken() throws Exception {
+        mockMvc.perform(get("/api/v1/tasks"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+
+        verify(service, never()).findAll();
+    }
+
+    @Test
+    void findAll_shouldReturn401WithInvalidToken() throws Exception {
+        mockMvc.perform(get("/api/v1/tasks").header("Authorization", "Bearer token.invalido.123"))
+                .andExpect(status().isUnauthorized());
+
+        verify(service, never()).findAll();
     }
 }
