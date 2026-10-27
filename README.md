@@ -114,26 +114,6 @@ Get-Content database/003_add_users_security.sql | docker exec -i todo-postgres p
 
 ![Migración 003 aplicada](docs/evidence/security/01-migracion-003.png)
 
-### Avance del laboratorio
-
-- [x] Parte 1 · Rama `feature/jwt-security` creada a partir de `main`
-- [x] Parte 1 · Captura del estado inicial del CRUD
-- [ ] Parte 1 · Épica, features, historias y tareas en Jira
-- [x] Parte 1 · Estado inicial, alcance y componentes a modificar en el README
-- [x] Parte 2 · Script de migración `003_add_users_security.sql`
-- [x] Parte 2 · Migración ejecutada en el contenedor `todo-postgres`
-- [x] Parte 2 · Entidades y repositorios con propietario de la tarea
-- [x] Parte 2 · Pruebas de repositorio por propietario
-- [ ] Parte 3 · Spring Security, BCrypt, registro y login
-- [ ] Parte 4 · Generación y validación del JWT
-- [ ] Parte 5 · CRUD protegido, tareas por usuario y rol `ADMIN`
-- [ ] Parte 6 · Frontend con registro, login, cierre de sesión y token en memoria
-- [ ] Parte 7 · Pruebas automatizadas (PT-01 a PT-18) y cobertura JaCoCo
-- [ ] Parte 8 · Verificación manual de punta a punta
-- [ ] Diagramas C4, de clases y entidad-relación actualizados
-- [ ] Informe `docs/informe-seguridad-jwt.md`
-- [ ] Video de demostración
-
 ## Tecnologías
 
 | Capa | Tecnología |
