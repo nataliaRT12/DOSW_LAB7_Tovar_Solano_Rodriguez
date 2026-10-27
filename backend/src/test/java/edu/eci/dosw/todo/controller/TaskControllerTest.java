@@ -15,6 +15,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
@@ -49,6 +50,10 @@ class TaskControllerTest {
     @MockitoBean
     private TaskService service;
 
+    private SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor ana() {
+        return jwt().jwt(token -> token.subject("1"));
+    }
+
     private TaskResponse buildResponse(Long id) {
         return new TaskResponse(id, "Terminar laboratorio DOSW", "Completar pruebas del backend",
                 TaskStatus.PENDING, TaskPriority.HIGH,
@@ -57,9 +62,9 @@ class TaskControllerTest {
 
     @Test
     void findAll_shouldReturn200() throws Exception {
-        when(service.findAll()).thenReturn(List.of(buildResponse(1L), buildResponse(2L)));
+        when(service.findAll(1L)).thenReturn(List.of(buildResponse(1L), buildResponse(2L)));
 
-        mockMvc.perform(get("/api/v1/tasks").with(jwt()))
+        mockMvc.perform(get("/api/v1/tasks").with(ana()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(1));
@@ -67,9 +72,9 @@ class TaskControllerTest {
 
     @Test
     void findById_shouldReturn200WhenTaskExists() throws Exception {
-        when(service.findById(1L)).thenReturn(buildResponse(1L));
+        when(service.findById(1L, 1L)).thenReturn(buildResponse(1L));
 
-        mockMvc.perform(get("/api/v1/tasks/1").with(jwt()))
+        mockMvc.perform(get("/api/v1/tasks/1").with(ana()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.status").value("PENDING"));
@@ -77,9 +82,9 @@ class TaskControllerTest {
 
     @Test
     void findById_shouldReturn404WhenTaskDoesNotExist() throws Exception {
-        when(service.findById(99L)).thenThrow(new TaskNotFoundException(99L));
+        when(service.findById(99L, 1L)).thenThrow(new TaskNotFoundException(99L));
 
-        mockMvc.perform(get("/api/v1/tasks/99").with(jwt()))
+        mockMvc.perform(get("/api/v1/tasks/99").with(ana()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").value("Task with id 99 was not found"));
@@ -90,9 +95,9 @@ class TaskControllerTest {
         TaskCreateRequest request = new TaskCreateRequest(
                 "Terminar laboratorio DOSW", "Completar pruebas del backend",
                 TaskPriority.HIGH, LocalDate.of(2026, 9, 25));
-        when(service.create(any(TaskCreateRequest.class))).thenReturn(buildResponse(1L));
+        when(service.create(any(TaskCreateRequest.class), eq(1L))).thenReturn(buildResponse(1L));
 
-        mockMvc.perform(post("/api/v1/tasks").with(jwt())
+        mockMvc.perform(post("/api/v1/tasks").with(ana())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -104,7 +109,7 @@ class TaskControllerTest {
     void create_shouldReturn400WhenTitleIsBlank() throws Exception {
         TaskCreateRequest request = new TaskCreateRequest("", "Sin título", TaskPriority.LOW, null);
 
-        mockMvc.perform(post("/api/v1/tasks").with(jwt())
+        mockMvc.perform(post("/api/v1/tasks").with(ana())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -116,9 +121,9 @@ class TaskControllerTest {
         TaskUpdateRequest request = new TaskUpdateRequest(
                 "Terminar laboratorio DOSW", "Backend y Front-end terminados",
                 TaskStatus.IN_PROGRESS, TaskPriority.HIGH, LocalDate.of(2026, 9, 25));
-        when(service.update(eq(1L), any(TaskUpdateRequest.class))).thenReturn(buildResponse(1L));
+        when(service.update(eq(1L), any(TaskUpdateRequest.class), eq(1L))).thenReturn(buildResponse(1L));
 
-        mockMvc.perform(put("/api/v1/tasks/1").with(jwt())
+        mockMvc.perform(put("/api/v1/tasks/1").with(ana())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -129,10 +134,10 @@ class TaskControllerTest {
     void update_shouldReturn404WhenTaskDoesNotExist() throws Exception {
         TaskUpdateRequest request = new TaskUpdateRequest(
                 "Título", null, TaskStatus.PENDING, TaskPriority.LOW, null);
-        when(service.update(eq(99L), any(TaskUpdateRequest.class)))
+        when(service.update(eq(99L), any(TaskUpdateRequest.class), eq(1L)))
                 .thenThrow(new TaskNotFoundException(99L));
 
-        mockMvc.perform(put("/api/v1/tasks/99").with(jwt())
+        mockMvc.perform(put("/api/v1/tasks/99").with(ana())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
@@ -140,17 +145,17 @@ class TaskControllerTest {
 
     @Test
     void delete_shouldReturn204WhenTaskExists() throws Exception {
-        mockMvc.perform(delete("/api/v1/tasks/1").with(jwt()))
+        mockMvc.perform(delete("/api/v1/tasks/1").with(ana()))
                 .andExpect(status().isNoContent());
 
-        verify(service).delete(1L);
+        verify(service).delete(1L, 1L);
     }
 
     @Test
     void delete_shouldReturn404WhenTaskDoesNotExist() throws Exception {
-        doThrow(new TaskNotFoundException(99L)).when(service).delete(99L);
+        doThrow(new TaskNotFoundException(99L)).when(service).delete(99L, 1L);
 
-        mockMvc.perform(delete("/api/v1/tasks/99").with(jwt()))
+        mockMvc.perform(delete("/api/v1/tasks/99").with(ana()))
                 .andExpect(status().isNotFound());
     }
 
@@ -160,7 +165,7 @@ class TaskControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401));
 
-        verify(service, never()).findAll();
+        verify(service, never()).findAll(any());
     }
 
     @Test
@@ -168,6 +173,6 @@ class TaskControllerTest {
         mockMvc.perform(get("/api/v1/tasks").header("Authorization", "Bearer token.invalido.123"))
                 .andExpect(status().isUnauthorized());
 
-        verify(service, never()).findAll();
+        verify(service, never()).findAll(any());
     }
 }
