@@ -114,6 +114,16 @@ Get-Content database/003_add_users_security.sql | docker exec -i todo-postgres p
 
 ![Migración 003 aplicada](docs/evidence/security/01-migracion-003.png)
 
+### Cuenta ADMIN para desarrollo local
+
+El registro público siempre crea usuarios con rol `USER` y no acepta el campo `role`. Para probar `/api/v1/admin/summary` en local se registra una cuenta normal desde la aplicación y luego se promueve directamente en la base de datos con el script [`database/dev/promote_admin.sql`](database/dev/promote_admin.sql):
+
+```
+Get-Content database/dev/promote_admin.sql | docker exec -i todo-postgres psql -U todo_user -d todo_db -v email=admin@todo.local
+```
+
+El rol viaja dentro del JWT, así que después de promover la cuenta hay que iniciar sesión de nuevo para obtener un token con rol `ADMIN`. Este script es solo para desarrollo; no se publican contraseñas reales.
+
 ## Tecnologías
 
 | Capa | Tecnología |
