@@ -124,6 +124,77 @@ Get-Content database/dev/promote_admin.sql | docker exec -i todo-postgres psql -
 
 El rol viaja dentro del JWT, así que después de promover la cuenta hay que iniciar sesión de nuevo para obtener un token con rol `ADMIN`. Este script es solo para desarrollo; no se publican contraseñas reales.
 
+### Contrato de endpoints
+
+Base: `http://localhost:8080/api/v1`. Las rutas autenticadas requieren la cabecera `Authorization: Bearer <JWT>`.
+
+| Método | Endpoint | Acceso | Respuestas |
+| --- | --- | --- | --- |
+| `POST` | `/auth/register` | Público | `201`, `400`, `409` |
+| `POST` | `/auth/login` | Público | `200` con JWT, `400`, `401` |
+| `GET` | `/users/me` | Autenticado | `200`, `401` |
+| `GET` | `/tasks` | Autenticado | `200` (solo tareas propias), `401` |
+| `GET` | `/tasks/{id}` | Autenticado | `200`, `401`, `404` (inexistente o ajena) |
+| `POST` | `/tasks` | Autenticado | `201` (propietario = usuario del token), `400`, `401` |
+| `PUT` | `/tasks/{id}` | Autenticado | `200`, `400`, `401`, `404` (inexistente o ajena) |
+| `DELETE` | `/tasks/{id}` | Autenticado | `204`, `401`, `404` (inexistente o ajena) |
+| `GET` | `/categories`, `/categories/{id}` | Autenticado | `200`, `401`, `404` |
+| `POST`, `PUT` | `/categories`, `/categories/{id}` | Autenticado | `201`/`200`, `400`, `401`, `404` |
+| `GET` | `/admin/summary` | `ADMIN` | `200`, `401`, `403` |
+
+Las categorías son un catálogo compartido del requisito anterior: exigen autenticación, pero no tienen propietario.
+
+**Registro**
+
+```
+POST /api/v1/auth/register
+Content-Type: application/json
+
+{ "name": "Ana Pérez", "email": "ana@example.com", "password": "ContrasenaDemo123!" }
+```
+
+```
+201 Created
+{ "id": 1, "name": "Ana Pérez", "email": "ana@example.com", "role": "USER" }
+```
+
+**Inicio de sesión**
+
+```
+POST /api/v1/auth/login
+Content-Type: application/json
+
+{ "email": "ana@example.com", "password": "ContrasenaDemo123!" }
+```
+
+```
+200 OK
+{ "tokenType": "Bearer", "accessToken": "<JWT_FIRMADO>", "expiresIn": 1800 }
+```
+
+**Resumen administrativo**
+
+```
+GET /api/v1/admin/summary
+Authorization: Bearer <JWT_DE_ADMIN>
+```
+
+```
+200 OK
+{ "totalUsers": 4, "totalTasks": 5, "tasksByStatus": { "PENDING": 5, "IN_PROGRESS": 0, "COMPLETED": 0 } }
+```
+
+**Política de errores.** Todas las respuestas de error tienen el formato `{ "status": ..., "message": ... }`.
+
+| Situación | Código |
+| --- | --- |
+| Datos inválidos en registro, login o tareas | `400 Bad Request` |
+| Registro con correo ya existente | `409 Conflict` |
+| Login inválido | `401 Unauthorized` |
+| Falta de token, token expirado, alterado o de otro emisor | `401 Unauthorized` |
+| JWT válido sin el rol requerido | `403 Forbidden` |
+| Tarea inexistente o perteneciente a otro usuario | `404 Not Found` |
+
 ### Pruebas de seguridad
 
 Back-end (desde `backend`, no necesita Docker: las pruebas que levantan la aplicación completa usan H2 en memoria con el perfil `test`):
