@@ -140,13 +140,13 @@ npm test
 
 | Tipo | Clases | Pruebas |
 | --- | --- | --- |
-| Unitarias (Mockito) | `AuthServiceTest`, `TaskServiceTest`, `AdminServiceTest`, `TokenServiceTest` | 26 |
-| Controladores con Spring Security (MockMvc) | `AuthControllerTest`, `TaskControllerTest`, `UserControllerTest`, `AdminControllerTest` | 24 |
+| Unitarias (Mockito) | `AuthServiceTest`, `TaskServiceTest`, `AdminServiceTest`, `TokenServiceTest`, `CategoryServiceTest` | 34 |
+| Controladores con Spring Security (MockMvc) | `AuthControllerTest`, `TaskControllerTest`, `UserControllerTest`, `AdminControllerTest`, `CategoryControllerTest` | 33 |
 | Repositorio (JPA) | `TaskRepositoryTest` | 5 |
 | Integración HTTP + seguridad + persistencia | `SecurityIntegrationTest`, `TodoApiApplicationTests` | 17 |
 | Front-end (Vitest + Testing Library) | `App.test`, `LoginForm.test`, `RegisterForm.test`, `TasksPage.test`, `taskApi.test`, `authApi.test`, `TaskForm.test`, `TaskList.test` | 34 |
 
-Total: 72 pruebas en el back-end y 34 en el front-end.
+Total: 89 pruebas en el back-end y 34 en el front-end.
 
 #### Matriz de pruebas
 
@@ -175,13 +175,20 @@ Total: 72 pruebas en el back-end y 34 en el front-end.
 
 Reporte en `backend/target/site/jacoco/index.html` después de `mvn clean verify`.
 
-| Alcance | Instrucciones | Líneas |
-| --- | --- | --- |
-| Proyecto completo | 79,3 % | 73,2 % |
-| Sin el módulo de categorías | 95,8 % | 95,6 % |
-| Componentes de seguridad (auth, JWT, usuarios, admin) | 97,7 % | — |
+| Métrica | Cobertura |
+| --- | --- |
+| Instrucciones | 95,3 % |
+| Ramas | 87,5 % |
+| Líneas | 91,5 % |
+| Paquete `security` | 100 % de instrucciones |
 
-El módulo de categorías corresponde al requisito anterior y no tiene pruebas en `main`, por eso baja el porcentaje global. La cobertura no reemplaza los escenarios de seguridad: estos se validan explícitamente en la matriz anterior.
+Al iniciar este laboratorio el módulo de categorías del requisito anterior no tenía pruebas; se agregaron `CategoryServiceTest` y `CategoryControllerTest` para mantener la cobertura por encima del 80 %. La cobertura no reemplaza los escenarios de seguridad: estos se validan explícitamente en la matriz anterior.
+
+![Pruebas del back-end](docs/evidence/security/07-backend-tests.png)
+
+![Pruebas del front-end](docs/evidence/security/08-frontend-tests.png)
+
+![Reporte JaCoCo](docs/evidence/security/09-jacoco.png)
 
 ## Tecnologías
 
