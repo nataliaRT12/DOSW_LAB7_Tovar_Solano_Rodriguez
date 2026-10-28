@@ -190,6 +190,46 @@ Al iniciar este laboratorio el módulo de categorías del requisito anterior no 
 
 ![Reporte JaCoCo](docs/evidence/security/09-jacoco.png)
 
+### Verificación manual de punta a punta
+
+Recorrido realizado con PostgreSQL en Docker, la API en Spring Boot y el frontend en React, todo en local.
+
+**1. Registro e inicio de sesión de Ana y Luis.** Cada uno ve únicamente sus tareas.
+
+![Inicio de sesión](docs/evidence/security/02-react-login.png)
+
+![Tareas de Ana](docs/evidence/security/03-react-tareas-ana.png)
+
+![Tareas de Luis](docs/evidence/security/04-react-tareas-luis.png)
+
+**2. Contraseñas almacenadas con BCrypt.** La cuenta `legacy` tiene `LOCKED`, que no es un hash válido.
+
+![Hash de contraseñas](docs/evidence/security/06-bd-password-hash.png)
+
+**3. Luis intenta modificar, eliminar y consultar la tarea 4 de Ana usando su propio JWT.** El servidor responde `404` en los tres casos y la tarea de Ana permanece igual.
+
+![Luis contra la tarea de Ana](docs/evidence/security/10-luis-tarea-ana.png)
+
+**4. Ruta protegida sin token y con un token alterado.** Ambas responden `401`.
+
+![Sin token y token alterado](docs/evidence/security/11-sin-token-y-alterado.png)
+
+**5. `/api/v1/admin/summary` con `USER` y con `ADMIN`.** Ana (`USER`) recibe `403`; la cuenta de administrador se registra como `USER`, se promueve con el script de desarrollo y, tras iniciar sesión de nuevo, recibe `200` con las métricas agregadas.
+
+![Admin con USER](docs/evidence/security/12-admin-como-user.png)
+
+![Promoción a ADMIN](docs/evidence/security/13-promover-admin.png)
+
+![Admin con ADMIN](docs/evidence/security/14-admin-como-admin.png)
+
+**6. Propietarios en PostgreSQL.** Cada tarea está relacionada con su usuario y la tarea de Ana sigue sin cambios después del intento de Luis.
+
+![Tareas por usuario](docs/evidence/security/05-bd-tareas-por-usuario.png)
+
+![Base de datos después del intento](docs/evidence/security/15-bd-despues-del-ataque.png)
+
+**7. Pruebas automatizadas.** Ver la sección anterior: 89 pruebas en el back-end y 34 en el front-end.
+
 ## Tecnologías
 
 | Capa | Tecnología |
