@@ -1,4 +1,4 @@
-# DOSW_LAB6_Rodriguez
+# DOSW_LAB7_Tovar_Solano_Rodriguez
 
 # ToDo Full Stack
 
@@ -675,7 +675,7 @@ REST Controller  →  Service  →  Repository  →  Entity JPA
 ## Estructura del repositorio
 
 ```
-DOSW_LAB6_Rodriguez/
+DOSW_LAB7_Tovar_Solano_Rodriguez/
 ├── backend/                API Spring Boot
 │   ├── .env.example        Variables necesarias (sin valores)
 │   └── src/main/java/edu/eci/dosw/todo/
