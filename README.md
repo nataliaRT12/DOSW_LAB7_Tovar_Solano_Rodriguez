@@ -71,6 +71,8 @@ El trabajo se organizó en la épica AE-9, "Seguridad: cuentas de usuario y tare
 
 ![Historia HU-SEG-03 con sus criterios de aceptación](docs/evidence/security/18-jira-historia.png)
 
+![Feature F3 con su descripción y su historia](docs/evidence/security/19-jira-feature.png)
+
 ### Componentes que se modifican
 
 | Capa | Componente | Cambio |
