@@ -124,6 +124,65 @@ Get-Content database/dev/promote_admin.sql | docker exec -i todo-postgres psql -
 
 El rol viaja dentro del JWT, así que después de promover la cuenta hay que iniciar sesión de nuevo para obtener un token con rol `ADMIN`. Este script es solo para desarrollo; no se publican contraseñas reales.
 
+### Pruebas de seguridad
+
+Back-end (desde `backend`, no necesita Docker: las pruebas que levantan la aplicación completa usan H2 en memoria con el perfil `test`):
+
+```
+mvn clean verify
+```
+
+Front-end (desde `frontend`):
+
+```
+npm test
+```
+
+| Tipo | Clases | Pruebas |
+| --- | --- | --- |
+| Unitarias (Mockito) | `AuthServiceTest`, `TaskServiceTest`, `AdminServiceTest`, `TokenServiceTest` | 26 |
+| Controladores con Spring Security (MockMvc) | `AuthControllerTest`, `TaskControllerTest`, `UserControllerTest`, `AdminControllerTest` | 24 |
+| Repositorio (JPA) | `TaskRepositoryTest` | 5 |
+| Integración HTTP + seguridad + persistencia | `SecurityIntegrationTest`, `TodoApiApplicationTests` | 17 |
+| Front-end (Vitest + Testing Library) | `App.test`, `LoginForm.test`, `RegisterForm.test`, `TasksPage.test`, `taskApi.test`, `authApi.test`, `TaskForm.test`, `TaskList.test` | 34 |
+
+Total: 72 pruebas en el back-end y 34 en el front-end.
+
+#### Matriz de pruebas
+
+| ID | Prueba | Resultado esperado | Dónde se verifica |
+| --- | --- | --- | --- |
+| PT-01 | Registrar usuario válido | `201`, rol `USER` | `SecurityIntegrationTest.pt01_pt03…`, `AuthControllerTest`, `AuthServiceTest` |
+| PT-02 | Correo duplicado | `409`, sin duplicados | `SecurityIntegrationTest.pt02…`, `AuthControllerTest`, `AuthServiceTest` |
+| PT-03 | Guardar contraseña | Hash BCrypt, no texto plano | `SecurityIntegrationTest.pt01_pt03…`, `AuthServiceTest` |
+| PT-04 | Login correcto | `200` con token firmado | `SecurityIntegrationTest.pt04…`, `AuthControllerTest`, `TokenServiceTest` |
+| PT-05 | Login incorrecto | `401` sin token | `SecurityIntegrationTest.pt05…`, `AuthServiceTest`, `AuthControllerTest` |
+| PT-06 | Tareas sin token | `401` | `SecurityIntegrationTest.pt06…`, `TaskControllerTest` |
+| PT-07 | Tareas con token válido | `200`, solo las propias | `SecurityIntegrationTest.pt07…`, `TaskRepositoryTest`, `TaskServiceTest` |
+| PT-08 | Token modificado | `401` | `SecurityIntegrationTest.pt08…`, `TokenServiceTest` |
+| PT-09 | Token expirado | `401` | `SecurityIntegrationTest.pt09…`, `TokenServiceTest` |
+| PT-10 | Consultar tarea ajena | `404` sin datos | `SecurityIntegrationTest.pt10…`, `TaskServiceTest`, `TaskRepositoryTest` |
+| PT-11 | Modificar tarea ajena | `404`, sin cambios en BD | `SecurityIntegrationTest.pt11…`, `TaskServiceTest` |
+| PT-12 | Eliminar tarea ajena | `404`, sin cambios en BD | `SecurityIntegrationTest.pt12…`, `TaskServiceTest` |
+| PT-13 | Crear tarea autenticada | Propietario = usuario del token | `SecurityIntegrationTest.pt13…`, `TaskServiceTest` |
+| PT-14 | `USER` en `/admin/summary` | `403` | `SecurityIntegrationTest.pt14…`, `AdminControllerTest` |
+| PT-15 | `ADMIN` en `/admin/summary` | `200` | `SecurityIntegrationTest.pt15…`, `AdminControllerTest` |
+| PT-16 | Cerrar sesión en React | Token y tareas desaparecen de la UI | `App.test` (PT-16), `TasksPage.test` |
+| PT-17 | Respuesta `401` en React | Vuelve al inicio de sesión | `App.test` (PT-17), `TasksPage.test` |
+| PT-18 | Otro usuario inicia sesión | Solo ve sus tareas | `App.test` (PT-18) |
+
+#### Cobertura (JaCoCo)
+
+Reporte en `backend/target/site/jacoco/index.html` después de `mvn clean verify`.
+
+| Alcance | Instrucciones | Líneas |
+| --- | --- | --- |
+| Proyecto completo | 79,3 % | 73,2 % |
+| Sin el módulo de categorías | 95,8 % | 95,6 % |
+| Componentes de seguridad (auth, JWT, usuarios, admin) | 97,7 % | — |
+
+El módulo de categorías corresponde al requisito anterior y no tiene pruebas en `main`, por eso baja el porcentaje global. La cobertura no reemplaza los escenarios de seguridad: estos se validan explícitamente en la matriz anterior.
+
 ## Tecnologías
 
 | Capa | Tecnología |
