@@ -20,13 +20,13 @@ Aplicación web para gestionar tareas personales. Permite crear, consultar, edit
 
 | Nombre | Link |
 |---|---|
-| Mariana Tovar | |
+| Mariana Tovar Cardozo | https://github.com/Marix201/DOSW_Lab7_Tovar.git |
 | Paula Andrea Solano Morales |https://github.com/AndreaSolano23/DOSW_Lab6_Solano.git |
 | Natalia Andrea Rodríguez Torres | https://github.com/nataliaRT12/DOSW_LAB6_Rodriguez/tree/main |
 
 **Laboratorio de seguridad (JWT)**
 
-- Video de demostración: _pendiente_
+- Video de demostración: https://youtu.be/TxYtSOzQRq0
 - Informe de seguridad: [docs/informe-seguridad-jwt.md](docs/informe-seguridad-jwt.md)
 
 **Laboratorio anterior (CRUD)**
