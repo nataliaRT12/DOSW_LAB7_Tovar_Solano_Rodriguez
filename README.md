@@ -806,20 +806,13 @@ El token se guarda solo en memoria, así que al recargar la página hay que inic
 
 ## API REST
 
-Base: `http://localhost:8080/api/v1/tasks`
-
-| Operación | Método | Endpoint | Códigos |
-| --- | --- | --- | --- |
-| Listar tareas | GET | `/api/v1/tasks` | 200 |
-| Consultar tarea | GET | `/api/v1/tasks/{id}` | 200, 404 |
-| Crear tarea | POST | `/api/v1/tasks` | 201, 400 |
-| Actualizar tarea | PUT | `/api/v1/tasks/{id}` | 200, 400, 404 |
-| Eliminar tarea | DELETE | `/api/v1/tasks/{id}` | 204, 404 |
+El contrato completo, con el nivel de acceso de cada endpoint y la política de errores, está en [Contrato de endpoints](#contrato-de-endpoints). Todas las rutas de tareas requieren un JWT válido y operan solo sobre las tareas del usuario autenticado.
 
 Ejemplo de creación:
 
 ```
 POST /api/v1/tasks
+Authorization: Bearer <JWT_FIRMADO>
 Content-Type: application/json
 
 {
@@ -835,11 +828,13 @@ Ejemplo de error:
 ```
 { "status": 404, "message": "Task with id 99 was not found" }
 ```
-## Descripción y alcance de la funcionalidad implementada
+## Requisito anterior · Categorías
 
-Las respectivas historias de usuario se encuentran en Jira: https://parcialdosw.atlassian.net/jira/software/projects/AE/boards/70/timeline?atlOrigin=eyJpIjoiODRkZmJhZTYxMjU3NDM0N2JhYTI3YmQwYzFjOWJkYTgiLCJwIjoiaiJ9
+Las historias de usuario del requisito de categorías se encuentran en Jira: https://parcialdosw.atlassian.net/jira/software/projects/AE/boards/70/timeline?atlOrigin=eyJpIjoiODRkZmJhZTYxMjU3NDM0N2JhYTI3YmQwYzFjOWJkYTgiLCJwIjoiaiJ9
 
-## Diagramas C4
+## Diagramas C4 del laboratorio anterior
+
+Estos diagramas corresponden a la versión sin autenticación. Los diagramas actualizados con la seguridad JWT están en [Diagramas de la solución](#diagramas-de-la-solución).
 
 Diagrama de contexto:
 
@@ -865,29 +860,28 @@ Link de donde fueron realizados: https://lucid.app/lucidchart/11e63f3c-bdc9-4a8b
 
 ## Pruebas
 
-Back-end (desde `backend`):
-
-```
-mvn clean test
-mvn clean verify
-```
-
-`verify` genera además el reporte de cobertura en `target/site/jacoco/index.html`.
-
-- `TaskServiceTest`: 9 pruebas del Service con el Repository simulado con Mockito.
-- `TaskControllerTest`: 9 pruebas del Controller con MockMvc y el Service simulado.
-
-Front-end (desde `frontend`):
-
-```
-npm test
-```
-
-Pruebas con Vitest y React Testing Library sobre `TaskForm`, `TaskList` y `TasksPage`, con las llamadas HTTP simuladas.
+Los comandos, la matriz PT-01 a PT-18 y la cobertura están en [Pruebas de seguridad](#pruebas-de-seguridad).
 
 ## Evidencias
 
-Las capturas están en [docs/evidence](docs/evidence).
+Las capturas del laboratorio de seguridad están en [docs/evidence/security](docs/evidence/security).
+
+| Archivo | Evidencia |
+| --- | --- |
+| `00-estado-inicial-crud.png`, `00-api-sin-token.png` | Estado inicial: CRUD sin autenticación |
+| `01-migracion-003.png` | Migración `003` aplicada sin perder tareas |
+| `02-react-login.png` | Pantalla de inicio de sesión |
+| `03-react-tareas-ana.png`, `04-react-tareas-luis.png` | Cada usuario ve solo sus tareas |
+| `05-bd-tareas-por-usuario.png` | Tareas con propietarios distintos en PostgreSQL |
+| `06-bd-password-hash.png` | Contraseñas almacenadas con BCrypt |
+| `07-backend-tests.png`, `08-frontend-tests.png` | Pruebas automatizadas |
+| `09-jacoco.png` | Reporte de cobertura |
+| `10-luis-tarea-ana.png` | Acceso a una tarea ajena rechazado con 404 |
+| `11-sin-token-y-alterado.png` | Peticiones sin token y con token alterado rechazadas con 401 |
+| `12-admin-como-user.png`, `13-promover-admin.png`, `14-admin-como-admin.png` | Recurso administrativo con `USER` (403) y `ADMIN` (200) |
+| `15-bd-despues-del-ataque.png` | Datos intactos después del intento de acceso indebido |
+
+Las capturas del laboratorio anterior están en [docs/evidence](docs/evidence):
 
 | N.º | Evidencia |
 | --- | --- |
