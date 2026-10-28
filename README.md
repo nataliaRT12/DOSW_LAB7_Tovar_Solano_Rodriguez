@@ -16,6 +16,11 @@ Aplicación web para gestionar tareas personales. Permite crear, consultar, edit
 | Paula Andrea Solano Morales | paula.solano-m@mail.escuelaing.edu.co | AndreaSolano23 |
 | Natalia Andrea Rodríguez Torres | natalia.rodriguez-t@mail.escuelaing.edu.co | nataliaRT12 |
 
+**Links repositorios personales**
+| Mariana Tovar | |
+| Paula Andrea Solano Morales |  |
+| Natalia Andrea Rodríguez Torres | https://github.com/nataliaRT12/DOSW_LAB6_Rodriguez/tree/main |
+
 **Laboratorio de seguridad (JWT)**
 
 - Video de demostración: _pendiente_
