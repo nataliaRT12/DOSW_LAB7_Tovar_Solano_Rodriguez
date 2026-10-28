@@ -652,15 +652,19 @@ Recorrido realizado con PostgreSQL en Docker, la API en Spring Boot y el fronten
 | --- | --- |
 | Front-end | React + Vite, Vitest, React Testing Library |
 | Back-end | Java 21, Spring Boot 4, Maven, Spring Data JPA, Bean Validation |
+| Seguridad | Spring Security, OAuth2 Resource Server (JWT con Nimbus, HS256), BCrypt |
 | Base de datos | PostgreSQL 17 (imagen oficial `postgres:17-alpine` en Docker) |
-| Pruebas back-end | JUnit 5, Mockito, AssertJ, MockMvc |
+| Pruebas back-end | JUnit 5, Mockito, AssertJ, MockMvc, Spring Security Test, H2 (perfil `test`) |
 | Cobertura | JaCoCo |
 
 ## Arquitectura
 
 ```
-React (componentes, hooks, taskApi.js)
-        │  HTTP + JSON
+React (AuthContext, formularios, hooks, authApi.js, taskApi.js)
+        │  HTTP + JSON + Authorization: Bearer JWT
+        ▼
+SecurityFilterChain (valida el JWT)
+        │
         ▼
 REST Controller  →  Service  →  Repository  →  Entity JPA
                                                     │
@@ -668,26 +672,60 @@ REST Controller  →  Service  →  Repository  →  Entity JPA
                                               PostgreSQL (Docker)
 ```
 
-- **Controller:** expone `/api/v1/tasks`, valida la entrada con `@Valid` y devuelve los códigos HTTP.
-- **Service:** contiene la lógica de negocio (valores por defecto, existencia de tareas, conversión Entity ↔ DTO).
-- **Repository:** acceso a datos con `JpaRepository`.
-- **Entity / DTO:** `TaskEntity` se mapea a la tabla `tasks`; los DTOs (`TaskCreateRequest`, `TaskUpdateRequest`, `TaskResponse`) definen lo que entra y sale de la API.
-- **Manejo de errores:** `GlobalExceptionHandler` convierte las excepciones en respuestas 400 y 404 con formato `{ "status": ..., "message": ... }`.
+- **Seguridad:** `SecurityConfig` define las rutas públicas, el rol `ADMIN` y la validación del JWT; `TokenService` emite los tokens y `SecurityErrorHandler` responde 401/403 en JSON.
+- **Controller:** expone `/auth`, `/users`, `/tasks`, `/categories` y `/admin`; valida la entrada con `@Valid` y obtiene la identidad del usuario del `Jwt` autenticado.
+- **Service:** contiene la lógica de negocio (registro con BCrypt, login, tareas filtradas por propietario, métricas administrativas, conversión Entity ↔ DTO).
+- **Repository:** acceso a datos con `JpaRepository`; las consultas de tareas filtran por `id` y propietario.
+- **Entity / DTO:** `UserEntity` y `TaskEntity` se mapean a `users` y `tasks`; los DTOs definen lo que entra y sale de la API, sin exponer el hash de la contraseña.
+- **Manejo de errores:** `GlobalExceptionHandler` convierte las excepciones en respuestas 400, 401, 404 y 409 con formato `{ "status": ..., "message": ... }`.
 
 ## Estructura del repositorio
 
 ```
 DOSW_LAB6_Rodriguez/
-├── backend/        API Spring Boot
-├── frontend/       Aplicación React + Vite
+├── backend/                API Spring Boot
+│   ├── .env.example        Variables necesarias (sin valores)
+│   └── src/main/java/edu/eci/dosw/todo/
+│       ├── controller/     Auth, User, Task, Category, Admin
+│       ├── security/       SecurityConfig, TokenService, SecurityErrorHandler
+│       ├── service/        Lógica de negocio
+│       ├── repository/     Spring Data JPA
+│       ├── entity/         UserEntity, TaskEntity, enums
+│       ├── dto/            Peticiones y respuestas
+│       └── exception/      Excepciones y GlobalExceptionHandler
+├── frontend/               Aplicación React + Vite
+│   └── src/
+│       ├── api/            http.js, authApi.js, taskApi.js
+│       └── features/
+│           ├── auth/       AuthContext, LoginForm, RegisterForm, AuthPage
+│           └── tasks/      TasksPage, useTasks, componentes de tareas
 ├── database/
-│   └── 001_create_schema.sql
+│   ├── 001_create_schema.sql
+│   ├── 002_add_categories.sql
+│   ├── 003_add_users_security.sql
+│   └── dev/promote_admin.sql   Solo para desarrollo local
 └── docs/
-    ├── evidence/   Capturas de evidencia
-    └── informe-laboratorio.md
+    ├── evidence/           Capturas de evidencia (security/ para este laboratorio)
+    ├── informe-laboratorio.md
+    └── informe-seguridad-jwt.md
 ```
 
 ## Modelo de datos
+
+El diagrama entidad-relación está en la sección [Diagramas de la solución](#diagramas-de-la-solución).
+
+**Usuario (`users`)**
+
+| Campo | Tipo | Obligatorio | Valor por defecto |
+| --- | --- | --- | --- |
+| `id` | Long | Sí | Generado |
+| `name` | String (máx. 100) | Sí | |
+| `email` | String (máx. 255, único, en minúsculas) | Sí | |
+| `passwordHash` | String (hash BCrypt) | Sí | |
+| `role` | `USER`, `ADMIN` | Sí | `USER` |
+| `createdAt` | LocalDateTime | Sí | Fecha y hora actual |
+
+**Tarea (`tasks`)**
 
 | Campo | Tipo | Obligatorio | Valor por defecto |
 | --- | --- | --- | --- |
@@ -698,6 +736,7 @@ DOSW_LAB6_Rodriguez/
 | `priority` | `LOW`, `MEDIUM`, `HIGH` | Sí | `MEDIUM` |
 | `dueDate` | LocalDate | No | |
 | `createdAt` | LocalDateTime | Sí | Fecha y hora actual |
+| `owner` (`user_id`) | Usuario propietario | Sí | Usuario del token |
 
 ## Requisitos previos
 
