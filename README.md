@@ -12,8 +12,14 @@ Aplicación web para gestionar tareas personales. Permite crear, consultar, edit
 
 Natalia Andrea Rodriguez Torres 
 
+**Laboratorio de seguridad (JWT)**
+
+- Video de demostración: _pendiente_
+- Informe de seguridad: [docs/informe-seguridad-jwt.md](docs/informe-seguridad-jwt.md)
+
+**Laboratorio anterior (CRUD)**
+
 - Video de demostración: https://youtu.be/6RhqSoNWYNY?si=JfLxBJZMiZ0GHhpQ
-- Informe del laboratorio: [todo-fullstack/docs/informe-laboratorio.md](todo-fullstack/docs/informe-laboratorio.md)
 - Informe del laboratorio: [docs/informe-laboratorio.md](docs/informe-laboratorio.md)
 
 ## Laboratorio de extensión · Seguridad con Spring Security y JWT
