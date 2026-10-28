@@ -6,7 +6,7 @@ Natalia Andrea Rodriguez Torres
 
 ## 2. Enlaces
 
-- Repositorio: https://github.com/nataliaRT12/DOSW_LAB6_Rodriguez
+- Repositorio: https://github.com/nataliaRT12/DOSW_LAB7_Tovar_Solano_Rodriguez
 - Rama del laboratorio: `feature/jwt-security`
 - Video de demostración: _pendiente_
 
