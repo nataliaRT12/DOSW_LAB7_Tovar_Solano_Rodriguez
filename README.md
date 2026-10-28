@@ -124,6 +124,269 @@ Get-Content database/dev/promote_admin.sql | docker exec -i todo-postgres psql -
 
 El rol viaja dentro del JWT, así que después de promover la cuenta hay que iniciar sesión de nuevo para obtener un token con rol `ADMIN`. Este script es solo para desarrollo; no se publican contraseñas reales.
 
+### Diagramas de la solución
+
+Los diagramas corresponden a la implementación final de la rama `feature/jwt-security`.
+
+#### C4 · Nivel 1 · Contexto
+
+```mermaid
+flowchart TB
+    user["Usuario<br/>[Persona]<br/>Se registra, inicia sesión y gestiona sus propias tareas"]
+    admin["Administrador<br/>[Persona]<br/>Consulta el resumen general del sistema"]
+    todo["Sistema ToDo<br/>[Sistema de software]<br/>Gestión de tareas privadas por usuario con autenticación JWT"]
+
+    user -->|"Usa desde el navegador"| todo
+    admin -->|"Consulta métricas agregadas"| todo
+
+    classDef person fill:#08427b,color:#fff,stroke:#052e56
+    classDef system fill:#1168bd,color:#fff,stroke:#0b4884
+    class user,admin person
+    class todo system
+```
+
+#### C4 · Nivel 2 · Contenedores
+
+```mermaid
+flowchart TB
+    user["Usuario / Administrador<br/>[Persona]"]
+
+    subgraph todo["Sistema ToDo"]
+        spa["Aplicación web<br/>[React + Vite]<br/>Registro, login, tareas y cierre de sesión.<br/>Guarda el JWT en memoria"]
+        api["API REST<br/>[Spring Boot + Spring Security]<br/>Emite y valida JWT, aplica roles<br/>y propiedad de las tareas"]
+        db[("Base de datos<br/>[PostgreSQL 17 en Docker]<br/>users, tasks, categories")]
+    end
+
+    user -->|"HTTP"| spa
+    spa -->|"JSON / HTTP<br/>Authorization: Bearer JWT"| api
+    api -->|"JDBC / JPA"| db
+
+    classDef person fill:#08427b,color:#fff,stroke:#052e56
+    classDef container fill:#438dd5,color:#fff,stroke:#2e6295
+    class user person
+    class spa,api,db container
+```
+
+#### C4 · Nivel 3 · Componentes del back-end
+
+```mermaid
+flowchart TB
+    spa["Aplicación web React"]
+
+    subgraph api["API REST · Spring Boot"]
+        chain["SecurityFilterChain<br/>+ JwtDecoder<br/>Valida el Bearer token"]
+        errors["SecurityErrorHandler<br/>401 / 403 en JSON"]
+        authC["AuthController<br/>/auth/register, /auth/login"]
+        userC["UserController<br/>/users/me"]
+        taskC["TaskController<br/>/tasks"]
+        catC["CategoryController<br/>/categories"]
+        adminC["AdminController<br/>/admin/summary"]
+        authS["AuthService<br/>Registro y login con BCrypt"]
+        token["TokenService<br/>JwtEncoder HS256"]
+        userS["UserService"]
+        taskS["TaskService<br/>Filtra por propietario"]
+        catS["CategoryService"]
+        adminS["AdminService<br/>Métricas agregadas"]
+        userR["UserRepository"]
+        taskR["TaskRepository"]
+        catR["CategoryRepository"]
+        handler["GlobalExceptionHandler<br/>400 / 401 / 404 / 409"]
+    end
+
+    db[("PostgreSQL")]
+
+    spa -->|"JSON + Bearer"| chain
+    chain -.-> errors
+    chain --> authC & userC & taskC & catC & adminC
+    authC --> authS
+    authS --> token
+    authS --> userR
+    userC --> userS --> userR
+    taskC --> taskS --> taskR
+    taskS --> userR
+    catC --> catS --> catR
+    adminC --> adminS
+    adminS --> userR & taskR
+    userR & taskR & catR --> db
+    authC & userC & taskC & catC & adminC -.-> handler
+```
+
+#### C4 · Nivel 3 · Componentes del front-end
+
+```mermaid
+flowchart TB
+    subgraph spa["Aplicación web · React"]
+        main["main.jsx<br/>AuthProvider"]
+        ctx["AuthContext<br/>token y usuario en memoria,<br/>login, register, logout, expireSession"]
+        app["App<br/>Muestra AuthPage o TasksPage"]
+        authPage["AuthPage"]
+        login["LoginForm"]
+        register["RegisterForm"]
+        tasksPage["TasksPage<br/>Usuario y Sign out"]
+        hook["useTasks<br/>Si recibe 401, expira la sesión"]
+        comps["TaskForm / TaskList / TaskItem"]
+        authApi["authApi.js<br/>register, login, getProfile"]
+        taskApi["taskApi.js<br/>CRUD con Bearer token"]
+        http["http.js<br/>API_URL, authHeaders, ApiError"]
+    end
+
+    api["API REST Spring Boot"]
+
+    main --> ctx
+    main --> app
+    app --> authPage & tasksPage
+    authPage --> login & register
+    login & register --> ctx
+    ctx --> authApi
+    tasksPage --> hook & comps
+    hook --> ctx
+    hook --> taskApi
+    authApi & taskApi --> http
+    http -->|"fetch JSON"| api
+```
+
+#### Diagrama de clases (back-end)
+
+```mermaid
+classDiagram
+    direction LR
+
+    class UserEntity {
+        Long id
+        String name
+        String email
+        String passwordHash
+        UserRole role
+        LocalDateTime createdAt
+    }
+    class TaskEntity {
+        Long id
+        String title
+        String description
+        TaskStatus status
+        TaskPriority priority
+        LocalDate dueDate
+        LocalDateTime createdAt
+        UserEntity owner
+    }
+    class UserRole {
+        <<enumeration>>
+        USER
+        ADMIN
+    }
+    class UserRepository {
+        <<interface>>
+        findByEmail(email) Optional~UserEntity~
+        existsByEmail(email) boolean
+    }
+    class TaskRepository {
+        <<interface>>
+        findAllByOwnerId(ownerId) List~TaskEntity~
+        findByIdAndOwnerId(id, ownerId) Optional~TaskEntity~
+        countByStatus(status) long
+    }
+    class AuthService {
+        <<interface>>
+        register(RegisterRequest) UserResponse
+        login(LoginRequest) LoginResponse
+    }
+    class TaskService {
+        <<interface>>
+        findAll(ownerId) List~TaskResponse~
+        findById(id, ownerId) TaskResponse
+        create(request, ownerId) TaskResponse
+        update(id, request, ownerId) TaskResponse
+        delete(id, ownerId)
+    }
+    class UserService {
+        <<interface>>
+        findById(id) UserResponse
+    }
+    class AdminService {
+        <<interface>>
+        summary() AdminSummaryResponse
+    }
+    class TokenService {
+        issue(UserEntity) String
+        getExpirationSeconds() long
+    }
+    class SecurityConfig {
+        securityFilterChain(HttpSecurity) SecurityFilterChain
+        passwordEncoder() PasswordEncoder
+        jwtSigningKey(secret) SecretKey
+        jwtEncoder(key) JwtEncoder
+        jwtDecoder(key, issuer) JwtDecoder
+    }
+    class SecurityErrorHandler {
+        commence() 401
+        handle() 403
+    }
+    class AuthController
+    class UserController
+    class TaskController
+    class AdminController
+    class GlobalExceptionHandler
+
+    UserEntity "1" <-- "*" TaskEntity : owner
+    UserEntity --> UserRole
+    UserRepository ..> UserEntity
+    TaskRepository ..> TaskEntity
+    AuthService <|.. AuthServiceImpl
+    TaskService <|.. TaskServiceImpl
+    UserService <|.. UserServiceImpl
+    AdminService <|.. AdminServiceImpl
+    AuthServiceImpl --> UserRepository
+    AuthServiceImpl --> TokenService
+    TaskServiceImpl --> TaskRepository
+    TaskServiceImpl --> UserRepository
+    UserServiceImpl --> UserRepository
+    AdminServiceImpl --> UserRepository
+    AdminServiceImpl --> TaskRepository
+    AuthController --> AuthService
+    UserController --> UserService
+    TaskController --> TaskService
+    AdminController --> AdminService
+    SecurityConfig --> SecurityErrorHandler
+    TokenService ..> UserEntity
+```
+
+DTOs: `RegisterRequest`, `LoginRequest`, `LoginResponse`, `UserResponse`, `AdminSummaryResponse`, `TaskCreateRequest`, `TaskUpdateRequest`, `TaskResponse`. Excepciones: `EmailAlreadyRegisteredException` (409), `InvalidCredentialsException` (401), `TaskNotFoundException` y `UserNotFoundException` (404), manejadas en `GlobalExceptionHandler`.
+
+#### Modelo entidad-relación
+
+```mermaid
+erDiagram
+    USERS ||--o{ TASKS : "es propietario de"
+    CATEGORIES |o--o{ TASKS : "clasifica"
+
+    USERS {
+        BIGSERIAL id PK
+        VARCHAR_100 name "NOT NULL"
+        VARCHAR_255 email "NOT NULL, UNIQUE, en minúsculas"
+        VARCHAR_100 password_hash "NOT NULL, BCrypt"
+        VARCHAR_20 role "USER o ADMIN, por defecto USER"
+        TIMESTAMP created_at "NOT NULL"
+    }
+    TASKS {
+        BIGSERIAL id PK
+        VARCHAR_120 title "NOT NULL"
+        VARCHAR_500 description
+        VARCHAR_20 status "PENDING, IN_PROGRESS, COMPLETED"
+        VARCHAR_10 priority "LOW, MEDIUM, HIGH"
+        DATE due_date
+        TIMESTAMP created_at "NOT NULL"
+        BIGINT category_id FK "NULL"
+        BIGINT user_id FK "NOT NULL, indexado"
+    }
+    CATEGORIES {
+        BIGSERIAL id PK
+        VARCHAR_40 name "NOT NULL, UNIQUE"
+        VARCHAR_10 color "BLUE, GREEN, ORANGE, PURPLE"
+    }
+```
+
+Un usuario tiene muchas tareas y cada tarea pertenece a exactamente un usuario (`user_id NOT NULL`, `ON DELETE CASCADE`). La relación con `categories` viene del requisito anterior y es opcional.
+
 ### Contrato de endpoints
 
 Base: `http://localhost:8080/api/v1`. Las rutas autenticadas requieren la cabecera `Authorization: Bearer <JWT>`.
