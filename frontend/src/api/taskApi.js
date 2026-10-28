@@ -1,52 +1,38 @@
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api/v1/tasks'
+import { API_URL, authHeaders, handleResponse } from './http'
 
-async function handleResponse(response) {
-  if (!response.ok) {
-    let message = `Request failed with status ${response.status}`
-    try {
-      const body = await response.json()
-      if (body.message) {
-        message = body.message
-      }
-    } catch {
-      // The response had no JSON body; keep the default message.
-    }
-    throw new Error(message)
-  }
-  if (response.status === 204) {
-    return null
-  }
-  return response.json()
+const BASE_URL = `${API_URL}/tasks`
+const JSON_HEADERS = { 'Content-Type': 'application/json' }
+
+export async function getTasks(token) {
+  return handleResponse(await fetch(BASE_URL, { headers: authHeaders(token) }))
 }
 
-export async function getTasks() {
-  return handleResponse(await fetch(BASE_URL))
+export async function getTask(token, id) {
+  return handleResponse(await fetch(`${BASE_URL}/${id}`, { headers: authHeaders(token) }))
 }
 
-export async function getTask(id) {
-  return handleResponse(await fetch(`${BASE_URL}/${id}`))
-}
-
-export async function createTask(task) {
+export async function createTask(token, task) {
   return handleResponse(
     await fetch(BASE_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(token, JSON_HEADERS),
       body: JSON.stringify(task),
     }),
   )
 }
 
-export async function updateTask(id, task) {
+export async function updateTask(token, id, task) {
   return handleResponse(
     await fetch(`${BASE_URL}/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(token, JSON_HEADERS),
       body: JSON.stringify(task),
     }),
   )
 }
 
-export async function deleteTask(id) {
-  return handleResponse(await fetch(`${BASE_URL}/${id}`, { method: 'DELETE' }))
+export async function deleteTask(token, id) {
+  return handleResponse(
+    await fetch(`${BASE_URL}/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
+  )
 }

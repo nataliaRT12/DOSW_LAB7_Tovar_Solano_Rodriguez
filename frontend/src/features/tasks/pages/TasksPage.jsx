@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAuth } from '../../auth/context/AuthContext'
 import TaskForm from '../components/TaskForm'
 import TaskList from '../components/TaskList'
 import { useTasks } from '../hooks/useTasks'
@@ -10,6 +11,7 @@ const NEXT_STATUS = {
 }
 
 export default function TasksPage() {
+  const { user, logout } = useAuth()
   const { tasks, loading, error, addTask, editTask, removeTask } = useTasks()
   const [editingTask, setEditingTask] = useState(null)
 
@@ -34,7 +36,13 @@ export default function TasksPage() {
 
   return (
     <main className="tasks-page">
-      <h1>ToDo Tasks</h1>
+      <header className="page-header">
+        <h1>ToDo Tasks</h1>
+        <div className="session">
+          <span>{user.name}</span>
+          <button type="button" onClick={logout}>Sign out</button>
+        </div>
+      </header>
 
       <TaskForm
         key={editingTask ? editingTask.id : 'new'}
