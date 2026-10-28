@@ -136,46 +136,7 @@ Los diagramas corresponden a la implementación final de la rama `feature/jwt-se
 
 #### C4 · Nivel 1 · Contexto
 
-```mermaid
-flowchart LR
-    subgraph externos["ACTORES EXTERNOS"]
-        user["👤 Usuario<br/><br/>Persona que gestiona sus<br/>tareas personales"]
-    end
-
-    subgraph eci["ECI"]
-        admin["👤 Desarrollador / Administrador<br/>del sistema<br/><br/>Cuenta con rol ADMIN"]
-        todo["🖥️ ToDo App<br/>━━━━━━━━━━━━━━━━<br/><b>Componentes integrados</b><br/>Front-end: React + Vite<br/>(JWT en memoria)<br/>Back-end: Spring Boot + Spring Security<br/>(emite y valida JWT, BCrypt)<br/>PostgreSQL 17 en Docker"]
-    end
-
-    subgraph sistemaExterno["SISTEMA EXTERNO"]
-        github["GitHub<br/><br/>Repositorio del proyecto"]
-    end
-
-    proposito["<b>PROPÓSITO DEL SISTEMA</b><br/>Aplicación web para gestionar tareas<br/>personales privadas: cada usuario se<br/>registra, inicia sesión y solo puede crear,<br/>consultar, editar, cambiar de estado y<br/>eliminar sus propias tareas"]
-
-    user <-->|"Se registra e inicia sesión.<br/>Crea, consulta, edita, cambia<br/>el estado y elimina solo sus<br/>tareas con su JWT"| todo
-    admin <-->|"Ejecuta, despliega y prueba.<br/>Consulta el resumen general<br/>(/admin/summary)"| todo
-    todo <-.->|"Versiona el código"| github
-
-    subgraph convenciones["Convenciones"]
-        c1["──▶ Interacción de personas"]
-        c2["- - ▶ Interacción de sistemas"]
-        c3["▭ punteado: límite organizacional"]
-    end
-
-    style eci fill:#ffffff,stroke:#333,stroke-dasharray: 6 6,color:#000
-    style externos fill:#ffffff,stroke:#333,color:#000
-    style sistemaExterno fill:#ffffff,stroke:#333,color:#000
-    style convenciones fill:#ffffff,stroke:#333,color:#000
-    style proposito fill:#ffffff,stroke:#333,color:#000
-    style user fill:#ffffff,stroke:#ffffff,color:#000
-    style admin fill:#ffffff,stroke:#ffffff,color:#000
-    style github fill:#ffffff,stroke:#ffffff,color:#000
-    style todo fill:#ffffff,stroke:#333,color:#000
-    style c1 fill:#ffffff,stroke:#ffffff,color:#000
-    style c2 fill:#ffffff,stroke:#ffffff,color:#000
-    style c3 fill:#ffffff,stroke:#ffffff,color:#000
-```
+![Diagrama de contexto](docs/diagrams/c4-contexto.png)
 
 #### C4 · Nivel 2 · Contenedores
 
