@@ -195,6 +195,68 @@ Authorization: Bearer <JWT_DE_ADMIN>
 | JWT válido sin el rol requerido | `403 Forbidden` |
 | Tarea inexistente o perteneciente a otro usuario | `404 Not Found` |
 
+### Flujo de autenticación JWT
+
+**Inicio de sesión**
+
+```mermaid
+sequenceDiagram
+    actor U as Usuario
+    participant R as React (AuthContext)
+    participant A as AuthController
+    participant S as AuthService
+    participant DB as PostgreSQL
+    participant T as TokenService (JwtEncoder)
+
+    U->>R: Correo y contraseña
+    R->>A: POST /api/v1/auth/login
+    A->>S: login(request)
+    S->>DB: findByEmail(correo normalizado)
+    DB-->>S: Usuario con password_hash
+    S->>S: PasswordEncoder.matches (BCrypt)
+    alt Credenciales inválidas
+        S-->>A: InvalidCredentialsException
+        A-->>R: 401 Unauthorized
+    else Credenciales válidas
+        S->>T: issue(usuario)
+        T-->>S: JWT HS256 (sub, iss, iat, exp, roles)
+        S-->>A: tokenType, accessToken, expiresIn
+        A-->>R: 200 OK + JWT
+        R->>A: GET /api/v1/users/me (Bearer)
+        A-->>R: Perfil del usuario
+        R->>R: Guarda token y usuario en memoria
+        R-->>U: Vista de tareas
+    end
+```
+
+**Petición protegida**
+
+```mermaid
+sequenceDiagram
+    participant R as React (taskApi)
+    participant F as SecurityFilterChain
+    participant D as JwtDecoder
+    participant C as TaskController
+    participant S as TaskService
+    participant DB as PostgreSQL
+
+    R->>F: GET /api/v1/tasks + Authorization: Bearer JWT
+    F->>D: decode(token)
+    D->>D: Verifica firma HS256, exp, iss y sub
+    alt Token ausente, alterado o vencido
+        F-->>R: 401 Unauthorized (JSON)
+        R->>R: Limpia la sesión y muestra el login
+    else Token válido
+        D-->>F: Jwt + autoridades ROLE_*
+        F->>C: Petición autenticada
+        C->>S: findAll(id del sub)
+        S->>DB: findAllByOwnerId(id)
+        DB-->>S: Tareas del usuario
+        S-->>C: Lista de TaskResponse
+        C-->>R: 200 OK
+    end
+```
+
 ### Pruebas de seguridad
 
 Back-end (desde `backend`, no necesita Docker: las pruebas que levantan la aplicación completa usan H2 en memoria con el perfil `test`):
