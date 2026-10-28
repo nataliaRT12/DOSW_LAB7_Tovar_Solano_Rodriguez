@@ -257,6 +257,26 @@ sequenceDiagram
     end
 ```
 
+### Decisiones de seguridad
+
+| Tema | Decisión | Motivo |
+| --- | --- | --- |
+| Firma del JWT | HS256 con una llave simétrica. `NimbusJwtEncoder` y `NimbusJwtDecoder` usan el mismo `SecretKey`. | El backend emite y valida sus propios tokens; no hay terceros que necesiten una llave pública. |
+| Llave de firma | Se lee de `JWT_SECRET` (variable de entorno o `backend/.env`, ignorado por Git). Si tiene menos de 32 bytes la aplicación no arranca. | No hay secretos en el repositorio y se evita una llave débil para HMAC-SHA256. |
+| Contenido del token | `sub` (id del usuario), `iss` (`todo-api`), `iat`, `exp`, `email` y `roles`. | `sub` usa el id porque no cambia; los roles se convierten en autoridades `ROLE_USER` / `ROLE_ADMIN`. |
+| Validación | En cada petición se verifican la firma, `exp`, `iss` y que exista `sub`. | Decodificar el token no basta: un JWT alterado o de otro emisor debe rechazarse. |
+| Duración | 30 minutos, sin refresh token. | Requisito del laboratorio; al vencer el usuario vuelve a iniciar sesión. |
+| Sesión | `SessionCreationPolicy.STATELESS`, CSRF deshabilitado. | La API no usa cookies ni sesión de servidor; la identidad viaja solo en la cabecera `Authorization`. |
+| Almacenamiento en el frontend | El token y el usuario se guardan en el estado de React (`AuthContext`), no en `localStorage`. | Un script inyectado no encuentra el token persistido en el navegador. Como consecuencia, al recargar la página se pierde la sesión. |
+| Cierre de sesión | Solo en el cliente: se borra el token del estado y se desmonta la vista de tareas. | El JWT no se revoca en el servidor; si alguien lo copió, sigue siendo válido hasta que expire. En un sistema real se usaría una lista de revocación o tokens cortos con refresh token. |
+| Contraseñas | BCrypt (`BCryptPasswordEncoder`), entre 8 y 72 caracteres. | Hash lento y con sal; 72 es el límite que procesa BCrypt. Nunca se devuelve la contraseña ni su hash. |
+| Registro | El rol siempre es `USER`; el campo `role` enviado por el cliente se ignora. El correo se normaliza a minúsculas. | Ninguna petición pública puede elevar privilegios ni crear cuentas duplicadas con mayúsculas. |
+| Rol `ADMIN` | Solo se asigna con el script de desarrollo `database/dev/promote_admin.sql`. `/api/v1/admin/**` exige `hasRole("ADMIN")`. | La autorización por rol se hace en el backend, por URL. |
+| Propiedad de las tareas | El propietario se toma del `sub` del token y las consultas filtran por `id` y `owner`. | El cliente no puede elegir el dueño; una tarea ajena responde `404` para no revelar que existe. |
+| CORS | Solo se permite el origen `http://localhost:5173`, con los métodos `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS` y la cabecera `Authorization`. | El frontend local puede llamar a la API; otros orígenes no. |
+| Errores | `401` y `403` se responden en JSON con el mismo formato que el resto de la API (`SecurityErrorHandler`). | El frontend distingue sesión vencida (`401`) de falta de permisos (`403`). |
+| Logs | No se registran tokens, contraseñas ni la cabecera `Authorization`. | Evita filtrar credenciales en los registros. |
+
 ### Pruebas de seguridad
 
 Back-end (desde `backend`, no necesita Docker: las pruebas que levantan la aplicación completa usan H2 en memoria con el perfil `test`):
