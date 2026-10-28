@@ -59,6 +59,18 @@ Se convierte ToDo en una aplicación con cuentas de usuario y tareas privadas:
 
 Fuera del alcance: despliegue en la nube, CI/CD, login con Google, refresh tokens, MFA y recuperación de contraseña.
 
+### Planeación en Jira
+
+Tablero: https://parcialdosw.atlassian.net/jira/software/projects/AE/boards/70/timeline
+
+El trabajo se organizó en la épica AE-9, "Seguridad: cuentas de usuario y tareas privadas con JWT", dividida en seis features: gestión de cuentas (AE-10), protección de la API (AE-11), tareas privadas (AE-12), roles (AE-13), sesión en React (AE-14) y documentación y entrega (AE-15). Cada feature agrupa sus historias de usuario (HU-SEG-01 a HU-SEG-07), escritas con el formato "Como… quiero… para…" y con criterios de aceptación en Gherkin, y cada historia tiene sus tareas de implementación y de pruebas.
+
+![Épica de seguridad en Jira](docs/evidence/security/16-jira-epica.png)
+
+![Features de la épica en el backlog](docs/evidence/security/17-jira-backlog.png)
+
+![Historia HU-SEG-03 con sus criterios de aceptación](docs/evidence/security/18-jira-historia.png)
+
 ### Componentes que se modifican
 
 | Capa | Componente | Cambio |
