@@ -755,11 +755,12 @@ Se necesitan tres terminales.
 docker pull postgres:17-alpine
 docker volume create todo-postgres-data
 docker run -d --name todo-postgres -e POSTGRES_DB=todo_db -e POSTGRES_USER=todo_user -e POSTGRES_PASSWORD=todo_password -p 5432:5432 -v todo-postgres-data:/var/lib/postgresql/data postgres:17-alpine
-docker cp database/001_create_schema.sql todo-postgres:/001_create_schema.sql
-docker exec -i todo-postgres psql -U todo_user -d todo_db -f /001_create_schema.sql
+Get-Content database/001_create_schema.sql | docker exec -i todo-postgres psql -U todo_user -d todo_db
+Get-Content database/002_add_categories.sql | docker exec -i todo-postgres psql -U todo_user -d todo_db
+Get-Content database/003_add_users_security.sql | docker exec -i todo-postgres psql -U todo_user -d todo_db
 ```
 
-Si el contenedor ya existe, basta con iniciarlo:
+Si el contenedor ya existe, basta con iniciarlo. Si viene del laboratorio anterior, se aplican solo los scripts que falten (`002` y `003`); el `003` conserva las tareas existentes asignándolas al usuario `legacy@todo.local`.
 
 ```
 docker start todo-postgres
@@ -767,12 +768,29 @@ docker start todo-postgres
 
 ### 2. Back-end
 
+La llave de firma del JWT no está en el repositorio. Se configura una sola vez en el archivo `backend/.env`, que Git ignora (ver [`backend/.env.example`](backend/.env.example)). Para generar una llave aleatoria desde PowerShell:
+
 ```
 cd backend
+"JWT_SECRET=$([Convert]::ToBase64String((1..48 | ForEach-Object { Get-Random -Maximum 256 })))" | Out-File -Encoding ascii .env
+```
+
+Luego se inicia la API:
+
+```
 mvn spring-boot:run
 ```
 
-La API queda disponible en `http://localhost:8080`. La conexión a la base se configura en `application.properties` y puede sobrescribirse con las variables de entorno `DB_URL`, `DB_USER` y `DB_PASSWORD`.
+La API queda disponible en `http://localhost:8080`.
+
+| Variable | Obligatoria | Uso | Valor por defecto |
+| --- | --- | --- | --- |
+| `JWT_SECRET` | Sí | Llave HMAC para firmar y validar los JWT (mínimo 32 bytes) | Ninguno: sin ella la aplicación no arranca |
+| `DB_URL` | No | URL JDBC de PostgreSQL | `jdbc:postgresql://localhost:5432/todo_db` |
+| `DB_USER` | No | Usuario de la base de datos | `todo_user` |
+| `DB_PASSWORD` | No | Contraseña de la base de datos | `todo_password` (solo para el contenedor local) |
+
+Las variables pueden definirse en `backend/.env` o como variables de entorno del sistema.
 
 ### 3. Front-end
 
@@ -782,7 +800,9 @@ npm install
 npm run dev
 ```
 
-La aplicación queda disponible en `http://localhost:5173`.
+La aplicación queda disponible en `http://localhost:5173`. Consume la API en `http://localhost:8080/api/v1`; para usar otra URL se define `VITE_API_URL` (por ejemplo, en `frontend/.env.local`).
+
+El token se guarda solo en memoria, así que al recargar la página hay que iniciar sesión de nuevo.
 
 ## API REST
 
