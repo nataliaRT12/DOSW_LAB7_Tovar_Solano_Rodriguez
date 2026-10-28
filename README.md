@@ -17,6 +17,9 @@ Aplicación web para gestionar tareas personales. Permite crear, consultar, edit
 | Natalia Andrea Rodríguez Torres | natalia.rodriguez-t@mail.escuelaing.edu.co | nataliaRT12 |
 
 **Links repositorios personales**
+
+| Nombre | link |
+|---|---|---|
 | Mariana Tovar | |
 | Paula Andrea Solano Morales |  |
 | Natalia Andrea Rodríguez Torres | https://github.com/nataliaRT12/DOSW_LAB6_Rodriguez/tree/main |
