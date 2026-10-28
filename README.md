@@ -2,15 +2,19 @@
 
 # ToDo Full Stack
 
-Laboratorio 6 · Desarrollo y Operaciones de Software (DOSW)
+Laboratorio 7 · Seguridad
 Escuela Colombiana de Ingeniería Julio Garavito
 Docente: Rodrigo Gualtero
 
 Aplicación web para gestionar tareas personales. Permite crear, consultar, editar, cambiar de estado y eliminar tareas desde una interfaz en React que consume una API REST en Spring Boot, con persistencia en PostgreSQL ejecutado en Docker.
 
-## Integrante
+## Integrantes del equipo
 
-Natalia Andrea Rodriguez Torres 
+| Nombre | Correo institucional | Usuario de GitHub |
+|---|---|---|
+| Mariana Tovar | mariana.tovar-c@mail.escuelaing.edu.co | marix201 |
+| Paula Andrea Solano Morales | paula.solano-m@mail.escuelaing.edu.co | AndreaSolano23 |
+| Natalia Andrea Rodríguez Torres | natalia.rodriguez-t@mail.escuelaing.edu.co | nataliaRT12 |
 
 **Laboratorio de seguridad (JWT)**
 
